@@ -1,0 +1,13 @@
+{
+  "default": "0.50",
+  "/api/property/disclosure": "0.25",
+  "/api/property/hoa": "0.35",
+  "/api/property/title-preliminary": "0.45",
+  "/api/property/inspection": "0.75",
+  "/api/property/tax-history": "0.30",
+  "/api/property/flood-hazard": "0.40",
+  "/api/property/comparable-sales": "1.00",
+  "/api/property/schools": "0.25",
+  "/api/property/utilities-energy": "0.30",
+  "/api/property/permits-renovations": "0.55"
+}

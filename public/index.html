@@ -1,0 +1,2064 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agent lab</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0f1117;
+        --panel: #1a1d26;
+        --border: #2d3340;
+        --text: #e8eaed;
+        --muted: #9aa0a6;
+        --accent: #7c9eff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 1.5rem;
+      }
+      main {
+        width: 100%;
+        max-width: 44rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .tabbar {
+        display: flex;
+        gap: 0.35rem;
+        flex-wrap: wrap;
+      }
+      .tab {
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--muted);
+        padding: 0.45rem 0.85rem;
+        border-radius: 0.5rem;
+        font: inherit;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .tab:hover {
+        color: var(--text);
+      }
+      .tab.active {
+        color: var(--text);
+        border-color: var(--accent);
+        background: rgba(124, 158, 255, 0.12);
+      }
+      .role-toggle {
+        display: flex;
+        gap: 0.35rem;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .role-toggle-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--muted);
+        margin-right: 0.15rem;
+      }
+      .role-btn {
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--muted);
+        padding: 0.38rem 0.75rem;
+        border-radius: 999px;
+        font: inherit;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .role-btn:hover {
+        color: var(--text);
+      }
+      .role-btn.active[data-role="buyer"] {
+        color: var(--text);
+        border-color: var(--accent);
+        background: rgba(124, 158, 255, 0.12);
+      }
+      .role-btn.active[data-role="seller"] {
+        color: var(--text);
+        border-color: #c9b88a;
+        background: rgba(201, 184, 138, 0.12);
+      }
+      .msg.assistant .msg-label.seller-agent {
+        color: #c9b88a;
+      }
+      .panel {
+        display: none;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .panel.active {
+        display: flex;
+      }
+      .neg-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+      }
+      .neg-row {
+        margin-bottom: 0.85rem;
+        padding: 0.65rem 0.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.15);
+      }
+      .neg-row .who {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.35rem;
+      }
+      .neg-row.buyer .who {
+        color: var(--accent);
+      }
+      .neg-row.seller .who {
+        color: #c9b88a;
+      }
+      .neg-row .body {
+        word-break: break-word;
+        font-size: 0.88rem;
+        line-height: 1.45;
+      }
+      .neg-activity {
+        margin-top: 0.45rem;
+        font-size: 0.72rem;
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        border-left: 2px solid var(--border);
+        padding-left: 0.5rem;
+        white-space: pre-wrap;
+      }
+      .neg-trace-wrap .who {
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+      .neg-trace-line {
+        font-size: 0.72rem;
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        margin-top: 0.2rem;
+        line-height: 1.4;
+      }
+      .neg-meta {
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+      .neg-status {
+        margin: 0.35rem 0 0.65rem;
+        padding: 0.45rem 0.65rem;
+        border-radius: 0.45rem;
+        font-size: 0.78rem;
+        font-style: italic;
+        color: var(--muted);
+        background: rgba(124, 158, 255, 0.08);
+        border: 1px dashed var(--border);
+      }
+      .neg-status.neg-typing {
+        animation: negPulse 1.15s ease-in-out infinite;
+      }
+      @keyframes negPulse {
+        50% {
+          opacity: 0.68;
+        }
+      }
+      .row-inline {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+      }
+      button.btn-info {
+        width: 1.75rem;
+        height: 1.75rem;
+        flex-shrink: 0;
+        padding: 0;
+        border-radius: 50%;
+        font-size: 0.82rem;
+        font-weight: 700;
+        font-style: italic;
+        font-family: Georgia, 'Times New Roman', serif;
+        line-height: 1;
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        cursor: pointer;
+      }
+      button.btn-info:hover {
+        color: var(--text);
+        border-color: var(--accent);
+        background: rgba(124, 158, 255, 0.1);
+      }
+      .row-inline label {
+        font-size: 0.8rem;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+      select {
+        border-radius: 0.5rem;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--text);
+        padding: 0.35rem 0.5rem;
+        font: inherit;
+      }
+      input[type='number'] {
+        width: 4rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--text);
+        padding: 0.35rem 0.5rem;
+        font: inherit;
+      }
+      h1 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0;
+      }
+      p.meta {
+        margin: 0;
+        font-size: 0.8rem;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      #log {
+        flex: 1;
+        min-height: 12rem;
+        max-height: 50vh;
+        overflow-y: auto;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        padding: 1rem;
+        font-size: 0.9rem;
+        line-height: 1.45;
+      }
+      .msg {
+        margin-bottom: 0.75rem;
+        word-break: break-word;
+      }
+      .msg:not(.rich-text) {
+        white-space: pre-wrap;
+      }
+      .rich-text {
+        white-space: normal;
+        line-height: 1.5;
+      }
+      .rich-text .msg-label {
+        display: block;
+        font-weight: 700;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.35rem;
+        color: var(--muted);
+      }
+      .msg.user .rich-text .msg-label {
+        color: var(--accent);
+      }
+      .rich-text .md-heading {
+        margin: 0.7rem 0 0.35rem;
+        font-weight: 700;
+        line-height: 1.3;
+      }
+      .rich-text .md-h1 {
+        font-size: 1.08rem;
+        color: var(--text);
+      }
+      .rich-text .md-h2 {
+        font-size: 0.98rem;
+        color: var(--text);
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 0.2rem;
+      }
+      .rich-text .md-h3 {
+        font-size: 0.92rem;
+        color: var(--accent);
+      }
+      .rich-text .md-line {
+        margin: 0.3rem 0;
+      }
+      .rich-text .md-line:first-child {
+        margin-top: 0;
+      }
+      .rich-text strong {
+        font-weight: 700;
+        color: #fff;
+      }
+      .rich-text em {
+        font-style: italic;
+        color: #c5cae9;
+      }
+      .rich-text .md-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.88em;
+        background: rgba(0, 0, 0, 0.28);
+        padding: 0.08em 0.35em;
+        border-radius: 0.25rem;
+      }
+      .rich-text .status-line {
+        display: block;
+        margin: 0.85rem 0 0.4rem;
+        padding: 0.55rem 0.75rem;
+        border-radius: 0.5rem;
+        font-weight: 800;
+        font-size: 0.95rem;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+      .rich-text .status-agreed {
+        background: rgba(76, 175, 80, 0.2);
+        border: 1px solid rgba(129, 199, 132, 0.55);
+        color: #b9f6ca;
+      }
+      .rich-text .status-walked {
+        background: rgba(244, 67, 54, 0.16);
+        border: 1px solid rgba(239, 154, 154, 0.5);
+        color: #ffcdd2;
+      }
+      .rich-text .price-tag {
+        font-weight: 800;
+        font-size: 1.06em;
+        color: #ffe082;
+        background: rgba(255, 224, 130, 0.14);
+        padding: 0.06em 0.3em;
+        border-radius: 0.3rem;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      .msg.user {
+        color: var(--accent);
+      }
+      .msg.assistant {
+        color: var(--text);
+      }
+      .msg.err {
+        color: #f6a5a5;
+      }
+      .turn-assistant {
+        margin-bottom: 0.75rem;
+      }
+      .agent-activity {
+        font-size: 0.78rem;
+        color: var(--muted);
+        line-height: 1.5;
+        border-left: 3px solid var(--border);
+        padding: 0.35rem 0 0.35rem 0.65rem;
+        margin-bottom: 0.45rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      }
+      .agent-activity .label {
+        color: var(--accent);
+        font-weight: 600;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 0.25rem;
+      }
+      .agent-activity.pending {
+        opacity: 0.85;
+        animation: pulse 1.2s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        50% {
+          opacity: 0.45;
+        }
+      }
+      form {
+        display: flex;
+        gap: 0.5rem;
+      }
+      textarea {
+        flex: 1;
+        min-height: 3rem;
+        resize: vertical;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--text);
+        padding: 0.6rem 0.75rem;
+        font: inherit;
+      }
+      button {
+        border: none;
+        border-radius: 0.5rem;
+        padding: 0 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: #3d5afe;
+        color: white;
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      button.btn-ghost {
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--border);
+      }
+      button.btn-walk {
+        background: transparent;
+        color: #f6a5a5;
+        border: 1px solid rgba(246, 165, 165, 0.45);
+      }
+      button.btn-walk:hover:not(:disabled) {
+        color: #ffcdd2;
+        border-color: rgba(246, 165, 165, 0.75);
+        background: rgba(244, 67, 54, 0.1);
+      }
+      button.btn-walk:disabled {
+        opacity: 0.4;
+      }
+      #wallet-element {
+        margin-top: 0.5rem;
+      }
+      a {
+        color: var(--accent);
+      }
+      .wallet-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem 1rem;
+        padding: 0.85rem 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(124, 158, 255, 0.45);
+        background: linear-gradient(135deg, rgba(124, 158, 255, 0.14), rgba(61, 90, 254, 0.08));
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2) inset;
+      }
+      .wallet-bar-main {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        min-width: 8rem;
+      }
+      .wallet-bar-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+      .wallet-bar-spent {
+        font-size: 1.65rem;
+        font-weight: 700;
+        line-height: 1.1;
+        color: #c9b88a;
+        font-variant-numeric: tabular-nums;
+      }
+      .wallet-bar-status {
+        font-size: 1.05rem;
+        font-weight: 600;
+        line-height: 1.25;
+        color: var(--text);
+      }
+      .wallet-bar-status.ready {
+        color: #b8c9ff;
+      }
+      .wallet-bar-meta {
+        flex: 1;
+        min-width: 10rem;
+        font-size: 0.8rem;
+        color: var(--muted);
+        line-height: 1.4;
+      }
+      .wallet-bar-meta strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .wallet-bar-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-left: auto;
+      }
+      button.btn-wallet {
+        background: #3d5afe;
+        padding: 0.55rem 1rem;
+        font-size: 0.88rem;
+      }
+      button.btn-wallet-ghost {
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        padding: 0.55rem 0.85rem;
+        font-size: 0.82rem;
+      }
+      .wallet-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+      }
+      .wallet-modal[hidden] {
+        display: none;
+      }
+      .wallet-modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.62);
+        backdrop-filter: blur(2px);
+      }
+      .wallet-modal-panel {
+        position: relative;
+        width: 100%;
+        max-width: 26rem;
+        max-height: 90vh;
+        overflow-y: auto;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 0.85rem;
+        padding: 1.15rem 1.25rem 1.25rem;
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+      }
+      .wallet-modal-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 0.85rem;
+      }
+      .wallet-modal-head h2 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 600;
+      }
+      .wallet-modal-close {
+        background: transparent;
+        color: var(--muted);
+        border: none;
+        font-size: 1.35rem;
+        line-height: 1;
+        padding: 0.15rem 0.35rem;
+        cursor: pointer;
+      }
+      .wallet-hint {
+        font-size: 0.78rem;
+        color: var(--muted);
+        line-height: 1.45;
+        margin: 0.35rem 0 0;
+      }
+      .neg-spend-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.65rem 1.25rem;
+        margin: 0.75rem 0 0.65rem;
+        padding: 0.55rem 0.85rem;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 0.65rem;
+        font-size: 0.88rem;
+      }
+      .neg-spend-bar .neg-bar-group {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.35rem 0.65rem;
+      }
+      .neg-spend-bar .neg-spend-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+      }
+      .neg-spend-bar .neg-spend-amount {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .neg-spend-bar .neg-spend-tools {
+        color: var(--muted);
+      }
+      .neg-judge-panel {
+        margin-top: 0.85rem;
+        padding: 0.85rem 1rem;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 0.65rem;
+        font-size: 0.88rem;
+        line-height: 1.45;
+      }
+      .neg-judge-panel.pending {
+        color: var(--muted);
+        font-style: italic;
+      }
+      .neg-judge-panel.err {
+        border-color: #8b3a3a;
+        color: #f5a8a8;
+      }
+      .neg-judge-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.5rem 1rem;
+        margin-bottom: 0.65rem;
+      }
+      .neg-judge-head h3 {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 700;
+      }
+      .neg-judge-rating {
+        font-weight: 800;
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.15rem 0.45rem;
+        border-radius: 0.35rem;
+      }
+      .neg-judge-rating.elite { background: #3d3520; color: #ffe082; }
+      .neg-judge-rating.strong { background: #1a3328; color: #a5d6a7; }
+      .neg-judge-rating.competent { background: #1e2a3a; color: #90caf9; }
+      .neg-judge-rating.weak { background: #3a2a1e; color: #ffcc80; }
+      .neg-judge-rating.poor { background: #3a1e1e; color: #ef9a9a; }
+      .neg-judge-scores {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+        gap: 0.35rem 0.75rem;
+        margin: 0.5rem 0 0.75rem;
+        font-size: 0.8rem;
+      }
+      .neg-judge-score-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
+        color: var(--muted);
+      }
+      .neg-judge-score-row strong {
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+      }
+      .neg-judge-lists {
+        margin-top: 0.5rem;
+      }
+      .neg-judge-lists h4 {
+        margin: 0.55rem 0 0.25rem;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--muted);
+      }
+      .neg-judge-lists ul {
+        margin: 0;
+        padding-left: 1.15rem;
+      }
+      .neg-judge-lists li {
+        margin: 0.2rem 0;
+      }
+    </style>
+    <link rel="stylesheet" href="/lib/negotiation-chat.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Agent lab</h1>
+      <p class="meta" style="margin-top: -0.5rem">
+        Your <strong>buyer</strong> or <strong>seller</strong> agent — practice chat with either persona, or
+        <strong>run a negotiation</strong> against the <strong>remote seller-service</strong> (Lambda or local).
+      </p>
+      <div class="top-links meta" style="margin-top: -0.35rem">
+        <a href="/leaderboard.html" style="color: var(--accent); font-weight: 600; text-decoration: none">Leaderboard</a>
+        <span style="color: var(--muted)"> · ranked by judge score (AWS DynamoDB)</span>
+      </div>
+      <p class="meta" id="status">Loading…</p>
+
+      <div class="wallet-bar" id="walletBar" aria-live="polite">
+        <div class="wallet-bar-main">
+          <span class="wallet-bar-label">Spent so far</span>
+          <span class="wallet-bar-spent" id="walletBarSpent">$0.00</span>
+        </div>
+        <div class="wallet-bar-main">
+          <span class="wallet-bar-label">Payment method</span>
+          <span class="wallet-bar-status" id="walletBarStatus">Loading…</span>
+        </div>
+        <div class="wallet-bar-meta" id="walletBarMeta">MPP property tools — ~$0.50 each via SPT.</div>
+        <div class="wallet-bar-actions">
+          <button type="button" class="btn-wallet" id="walletTopUpOpen">Add payment method</button>
+        </div>
+      </div>
+
+      <div class="tabbar" role="tablist">
+        <button type="button" class="tab active" data-tab="chat" role="tab" aria-selected="true">Practice chat</button>
+        <button type="button" class="tab" data-tab="neg" role="tab" aria-selected="false">Run vs seller</button>
+      </div>
+
+      <div id="panel-chat" class="panel active" role="tabpanel">
+        <div class="role-toggle" role="group" aria-label="Practice chat agent">
+          <span class="role-toggle-label">Chat with</span>
+          <button type="button" class="role-btn active" data-chat-role="buyer" aria-pressed="true">Buyer agent</button>
+          <button type="button" class="role-btn" data-chat-role="seller" aria-pressed="false">Seller agent</button>
+        </div>
+        <div id="log"></div>
+        <form id="f">
+          <textarea id="input" placeholder="Message the buyer agent…" rows="2"></textarea>
+          <button type="submit" id="send">Send</button>
+        </form>
+        <p class="meta" id="chatRoleHint">
+          <strong>Buyer agent</strong> can call tools from <code>tools.manifest.json</code>. After edits, restart
+          <code>npm run dev</code> or POST <code>/api/chat/reload-manifest</code>.
+        </p>
+      </div>
+
+      <div id="panel-neg" class="panel" role="tabpanel">
+        <div class="neg-controls">
+          <label for="negGoal" class="meta" style="display: block">Buyer mandate (what you want the buyer agent to achieve)</label>
+          <textarea id="negGoal" rows="4"></textarea>
+          <div class="row-inline">
+            <button type="button" id="negRun">Run negotiation</button>
+            <button type="button" class="btn-walk" id="negWalk" disabled title="Stop the negotiation — you walk away">Walk</button>
+            <button type="button" class="btn-info" id="negInfoOpen" aria-label="How negotiation works" title="How negotiation works">i</button>
+          </div>
+        </div>
+        <div id="negSpendBar" class="neg-spend-bar" aria-live="polite">
+          <div class="neg-bar-group">
+            <span class="neg-spend-label">This negotiation</span>
+            <span class="neg-spend-amount" id="negSpendAmount">$0.00</span>
+            <span class="neg-spend-tools" id="negToolCount">0 tool calls</span>
+          </div>
+        </div>
+        <div id="negOut" class="neg-thread-container"></div>
+      </div>
+
+      <div id="negInfoModal" class="wallet-modal" hidden role="dialog" aria-modal="true" aria-labelledby="negInfoModalTitle">
+        <div class="wallet-modal-backdrop" id="negInfoModalBackdrop"></div>
+        <div class="wallet-modal-panel">
+          <div class="wallet-modal-head">
+            <h2 id="negInfoModalTitle">How negotiation works</h2>
+            <button type="button" class="wallet-modal-close" id="negInfoModalClose" aria-label="Close">×</button>
+          </div>
+          <p class="neg-meta" style="margin: 0; line-height: 1.55">
+            Runs <strong>turn-by-turn</strong>: short “considering…” states, then each side’s message. Either the <strong>buyer</strong> or <strong>seller</strong> may end early by putting
+            <code>STATUS: WALKED</code> on the <strong>last line only</strong> of their message (e.g. no progress, repetition, or mandate unreachable). The seller is instructed to walk when the thread is stuck. Stops on
+            <code>STATUS: AGREED</code> or <code>STATUS: WALKED</code>, or after <strong>15 rounds</strong> (each round = buyer, then seller). Click <strong>Walk</strong> anytime to stop as the human principal. The
+            <strong>seller always runs on seller-service</strong> (e.g. facilitator Lambda). Set <code>SELLER_SERVICE_URL</code> (and optional <code>SELLER_SERVICE_KEY</code>) in the buyer
+            <code>.env</code> — facilitator provides deployed service URLs. Without <code>SELLER_SERVICE_URL</code>, negotiation returns an error. Each <strong>buyer turn</strong> may run several internal model/tool steps before the message to the seller; those steps stream live below as <em>Buyer · reasoning / tools</em>.
+          </p>
+        </div>
+      </div>
+
+      <div id="walletModal" class="wallet-modal" hidden role="dialog" aria-modal="true" aria-labelledby="walletModalTitle">
+        <div class="wallet-modal-backdrop" id="walletModalBackdrop"></div>
+        <div class="wallet-modal-panel">
+          <div class="wallet-modal-head">
+            <div>
+              <h2 id="walletModalTitle">Payment method</h2>
+              <p class="wallet-hint" style="margin-top: 0.35rem">
+                Saved to this browser session. The agent mints a short-lived Shared Payment Token from this card each
+                time a paid property tool runs (~$0.50 per call to the seller).
+              </p>
+            </div>
+            <button type="button" class="wallet-modal-close" id="walletModalClose" aria-label="Close">×</button>
+          </div>
+          <p class="msg err" id="walletErr" style="display: none; margin-top: 0.75rem"></p>
+          <p class="meta" id="walletSpendLine" style="margin: 0.5rem 0 0"></p>
+          <p class="meta" id="walletLine" style="margin: 0.85rem 0 0">Loading…</p>
+          <div id="walletForm" style="display: none; margin-top: 0.65rem">
+            <div id="walletMount"></div>
+            <div class="row-inline" style="margin-top: 0.75rem">
+              <button type="button" id="walletSave">Save card</button>
+              <button type="button" class="btn-ghost" id="walletCancel">Cancel</button>
+            </div>
+          </div>
+          <div class="row-inline" style="margin-top: 0.85rem">
+            <button type="button" id="walletAdd">Add / replace card</button>
+            <button type="button" class="btn-ghost" id="walletClear">Remove card</button>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script src="/lib/leaderboard-store.js"></script>
+    <script src="/lib/negotiation-chat.js"></script>
+    <script>
+      const logEl = document.getElementById('log');
+      const statusEl = document.getElementById('status');
+      const form = document.getElementById('f');
+      const input = document.getElementById('input');
+      const sendBtn = document.getElementById('send');
+      const chatRoleHint = document.getElementById('chatRoleHint');
+
+      /** @type {'buyer' | 'seller'} */
+      let chatAgentRole = 'buyer';
+      const chatMessages = { buyer: [], seller: [] };
+      /** @type {{ buyer: { kind: string, text: string, activity?: { text: string }[] }[], seller: { kind: string, text: string, activity?: { text: string }[] }[] }} */
+      const chatDisplay = { buyer: [], seller: [] };
+
+      function chatAgentLabel(role = chatAgentRole) {
+        return role === 'seller' ? 'Seller agent' : 'Buyer agent';
+      }
+
+      function updateChatRoleUi() {
+        document.querySelectorAll('[data-chat-role]').forEach((btn) => {
+          const on = btn.getAttribute('data-chat-role') === chatAgentRole;
+          btn.classList.toggle('active', on);
+          btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        input.placeholder =
+          chatAgentRole === 'seller'
+            ? 'Message the seller agent (you play the buyer)…'
+            : 'Message the buyer agent…';
+        if (chatRoleHint) {
+          chatRoleHint.innerHTML =
+            chatAgentRole === 'seller'
+              ? '<strong>Seller agent</strong> uses the same persona as negotiation (1842 Hawthorne Ridge Rd). No tools — practice making offers and asking questions as the buyer.'
+              : '<strong>Buyer agent</strong> can call tools from <code>tools.manifest.json</code>. After edits, restart <code>npm run dev</code> or POST <code>/api/chat/reload-manifest</code>.';
+        }
+      }
+
+      function renderChatLog() {
+        logEl.innerHTML = '';
+        for (const entry of chatDisplay[chatAgentRole]) {
+          if (entry.kind === 'user') append('user', entry.text, { record: false });
+          else if (entry.kind === 'assistant') appendAssistantTurnStatic(entry.text, entry.activity);
+          else if (entry.kind === 'err') append('err', entry.text, { record: false });
+        }
+        scrollToBottomIfPinned(logEl);
+      }
+
+      function setChatAgentRole(role) {
+        const next = role === 'seller' ? 'seller' : 'buyer';
+        if (next === chatAgentRole) return;
+        chatStreamGen++;
+        chatAgentRole = next;
+        updateChatRoleUi();
+        renderChatLog();
+        input.focus();
+      }
+
+      document.querySelectorAll('[data-chat-role]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          setChatAgentRole(btn.getAttribute('data-chat-role'));
+        });
+      });
+
+      updateChatRoleUi();
+
+      const SCROLL_NEAR_BOTTOM_PX = 80;
+      let chatStreamGen = 0;
+      let negStreamGen = 0;
+      const NEG_MAX_ROUNDS = 15;
+
+      function isPinnedToBottom(scrollEl) {
+        const gap = scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight;
+        return gap <= SCROLL_NEAR_BOTTOM_PX;
+      }
+
+      function scrollToBottomIfPinned(scrollEl) {
+        if (isPinnedToBottom(scrollEl)) scrollEl.scrollTop = scrollEl.scrollHeight;
+      }
+
+      /**
+       * @param {HTMLElement} textEl
+       * @param {string} fullText
+       * @param {HTMLElement} scrollEl
+       * @param {() => boolean} isCancelled
+       */
+      async function typewriterReveal(textEl, fullText, scrollEl, isCancelled) {
+        const n = fullText.length;
+        if (n === 0) {
+          applyRichText(textEl, '');
+          scrollToBottomIfPinned(scrollEl);
+          return;
+        }
+        const chunk = n > 2200 ? 5 : n > 900 ? 3 : n > 350 ? 2 : 1;
+        const delayMs = chunk >= 4 ? 10 : chunk >= 2 ? 12 : 15;
+        let i = 0;
+        while (i < n) {
+          if (isCancelled()) {
+            applyRichText(textEl, fullText);
+            scrollToBottomIfPinned(scrollEl);
+            return;
+          }
+          i = Math.min(n, i + chunk);
+          textEl.classList.remove('rich-text');
+          textEl.textContent = fullText.slice(0, i);
+          scrollToBottomIfPinned(scrollEl);
+          await new Promise((r) => setTimeout(r, delayMs));
+        }
+        applyRichText(textEl, fullText);
+        scrollToBottomIfPinned(scrollEl);
+      }
+
+      function append(role, text, opts = {}) {
+        const record = opts.record !== false;
+        const d = document.createElement('div');
+        d.className = 'msg ' + role;
+        if (role === 'err') {
+          d.textContent = text;
+        } else {
+          const label = document.createElement('span');
+          label.className = 'msg-label';
+          if (role === 'user') {
+            label.textContent = 'You';
+          } else {
+            label.textContent = chatAgentLabel();
+            if (chatAgentRole === 'seller') label.classList.add('seller-agent');
+          }
+          const body = document.createElement('div');
+          body.className = 'msg-body';
+          applyRichText(body, text || '');
+          d.appendChild(label);
+          d.appendChild(body);
+          d.classList.add('rich-text');
+        }
+        logEl.appendChild(d);
+        scrollToBottomIfPinned(logEl);
+        if (record) chatDisplay[chatAgentRole].push({ kind: role === 'err' ? 'err' : role, text });
+      }
+
+      /**
+       * @param {string} reply
+       * @param {{ text: string }[] | null | undefined} activity
+       */
+      function appendAssistantTurnStatic(reply, activity) {
+        const wrap = document.createElement('div');
+        wrap.className = 'turn-assistant';
+        if (activity && activity.length) {
+          const act = document.createElement('div');
+          act.className = 'agent-activity';
+          const lines = activity.map((a) => '· ' + a.text).join('\n');
+          act.innerHTML = '<div class="label">Agent activity</div>' + escapeHtml(lines);
+          wrap.appendChild(act);
+        }
+        const msg = document.createElement('div');
+        msg.className = 'msg assistant rich-text';
+        const label = document.createElement('span');
+        label.className = 'msg-label' + (chatAgentRole === 'seller' ? ' seller-agent' : '');
+        label.textContent = chatAgentLabel();
+        const body = document.createElement('div');
+        body.className = 'msg-body';
+        applyRichText(body, reply || '');
+        msg.appendChild(label);
+        msg.appendChild(body);
+        wrap.appendChild(msg);
+        logEl.appendChild(wrap);
+      }
+
+      /** @returns {HTMLElement} */
+      function appendAgentPending() {
+        const wrap = document.createElement('div');
+        wrap.className = 'turn-assistant';
+        const act = document.createElement('div');
+        act.className = 'agent-activity pending';
+        act.dataset.role = 'pending-activity';
+        const toolsNote =
+          chatAgentRole === 'buyer'
+            ? ' <span style="opacity:0.7">(tools may run next)</span>'
+            : '';
+        act.innerHTML =
+          '<div class="label">' +
+          escapeHtml(chatAgentLabel()) +
+          ' activity</div>Waiting for the model…' +
+          toolsNote;
+        wrap.appendChild(act);
+        logEl.appendChild(wrap);
+        scrollToBottomIfPinned(logEl);
+        return wrap;
+      }
+
+      /**
+       * @param {HTMLElement} pendingWrap
+       * @param {string[]} lines
+       * @param {boolean} stillPending
+       */
+      function updatePendingActivity(pendingWrap, lines, stillPending) {
+        const act = pendingWrap.querySelector('[data-role="pending-activity"]');
+        if (!act) return;
+        act.className = stillPending ? 'agent-activity pending' : 'agent-activity';
+        const body =
+          lines.length > 0
+            ? lines.map((l) => '· ' + l).join('\n')
+            : chatAgentRole === 'buyer'
+              ? 'Waiting for the model… (tools may run next)'
+              : 'Waiting for the model…';
+        act.innerHTML = '<div class="label">' + escapeHtml(chatAgentLabel()) + ' activity</div>' + escapeHtml(body);
+        scrollToBottomIfPinned(logEl);
+      }
+
+      /** @param {ReadableStreamDefaultReader<Uint8Array>} reader */
+      async function consumeSseStream(reader, onEvent) {
+        const dec = new TextDecoder();
+        let buf = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          let sep;
+          while ((sep = buf.indexOf('\n\n')) !== -1) {
+            const block = buf.slice(0, sep);
+            buf = buf.slice(sep + 2);
+            for (const line of block.split('\n')) {
+              if (!line.startsWith('data: ')) continue;
+              try {
+                await onEvent(JSON.parse(line.slice(6)));
+              } catch {
+                continue;
+              }
+            }
+          }
+        }
+        if (buf.trim()) {
+          for (const line of buf.split('\n')) {
+            if (!line.startsWith('data: ')) continue;
+            try {
+              await onEvent(JSON.parse(line.slice(6)));
+            } catch {
+              continue;
+            }
+          }
+        }
+      }
+
+      /**
+       * @param {string} reply
+       * @param {{ text: string }[] | null | undefined} activity
+       * @param {number} streamGen
+       */
+      async function appendAssistantTurn(reply, activity, streamGen) {
+        const wrap = document.createElement('div');
+        wrap.className = 'turn-assistant';
+        if (activity && activity.length) {
+          const act = document.createElement('div');
+          act.className = 'agent-activity';
+          const lines = activity.map((a) => '· ' + a.text).join('\n');
+          act.innerHTML = '<div class="label">' + escapeHtml(chatAgentLabel()) + ' activity</div>' + escapeHtml(lines);
+          wrap.appendChild(act);
+        }
+        const msg = document.createElement('div');
+        msg.className = 'msg assistant rich-text';
+        const label = document.createElement('span');
+        label.className = 'msg-label' + (chatAgentRole === 'seller' ? ' seller-agent' : '');
+        label.textContent = chatAgentLabel();
+        const body = document.createElement('div');
+        body.className = 'msg-body';
+        msg.appendChild(label);
+        msg.appendChild(body);
+        wrap.appendChild(msg);
+        logEl.appendChild(wrap);
+        scrollToBottomIfPinned(logEl);
+        chatDisplay[chatAgentRole].push({
+          kind: 'assistant',
+          text: reply || '',
+          activity: activity && activity.length ? activity.map((a) => ({ text: a.text })) : undefined,
+        });
+        await typewriterReveal(body, reply || '', logEl, () => streamGen !== chatStreamGen);
+      }
+
+      function escapeHtml(s) {
+        const div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+      }
+
+      /** @param {string} s Already HTML-escaped plain text fragment */
+      function renderInlineMarkdown(s) {
+        let out = s;
+        out = out.replace(
+          /(\$[\d]{1,3}(?:,\d{3})+(?:\.\d{2})?|\$[\d]+(?:\.\d{2})?|\$[\d.,]+[kK]\b)/g,
+          '<span class="price-tag">$1</span>'
+        );
+        out = out.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+        out = out.replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, '<em>$1</em>');
+        out = out.replace(/_([^_\n]+)_/g, '<em>$1</em>');
+        out = out.replace(/`([^`\n]+)`/g, '<code class="md-code">$1</code>');
+        return out;
+      }
+
+      /** @param {string} text */
+      function renderMarkdownToHtml(text) {
+        const lines = String(text || '').split(/\r?\n/);
+        const parts = [];
+        for (const raw of lines) {
+          const line = raw.trimEnd();
+          const trimmed = line.trim();
+          if (!trimmed) {
+            parts.push('<br>');
+            continue;
+          }
+          const statusMatch = trimmed.match(/^STATUS:\s*(AGREED|WALKED)\b/i);
+          if (statusMatch) {
+            const status = statusMatch[1].toUpperCase();
+            parts.push(
+              `<div class="status-line status-${statusMatch[1].toLowerCase()}"><strong>STATUS: ${escapeHtml(status)}</strong></div>`
+            );
+            continue;
+          }
+          const h3 = trimmed.match(/^###\s+(.+)$/);
+          if (h3) {
+            parts.push(`<h4 class="md-heading md-h3">${renderInlineMarkdown(escapeHtml(h3[1]))}</h4>`);
+            continue;
+          }
+          const h2 = trimmed.match(/^##\s+(.+)$/);
+          if (h2) {
+            parts.push(`<h3 class="md-heading md-h2">${renderInlineMarkdown(escapeHtml(h2[1]))}</h3>`);
+            continue;
+          }
+          const h1 = trimmed.match(/^#\s+(.+)$/);
+          if (h1) {
+            parts.push(`<h2 class="md-heading md-h1">${renderInlineMarkdown(escapeHtml(h1[1]))}</h2>`);
+            continue;
+          }
+          parts.push(`<div class="md-line">${renderInlineMarkdown(escapeHtml(line))}</div>`);
+        }
+        return parts.join('');
+      }
+
+      /** @param {HTMLElement} el @param {string} text */
+      function applyRichText(el, text) {
+        el.classList.add('rich-text');
+        el.innerHTML = renderMarkdownToHtml(text);
+      }
+
+      async function refreshMeta() {
+        try {
+          const [rMeta, rCfg] = await Promise.all([
+            fetch('/api/chat/meta'),
+            fetch('/api/wallet/config', { credentials: 'include' }),
+          ]);
+          const j = await rMeta.json();
+          const wc = await rCfg.json().catch(() => ({}));
+          const wbit =
+            wc.publishableKey && wc.configured
+              ? ' · MPP card: Stripe ready' +
+                (wc.sptMintMode === 'test_helper' ? ' · SPT mint=test_helper' : '')
+              : wc.publishableKey && wc.sptMintMode === 'test_helper'
+                ? ' · MPP card: add STRIPE_SECRET_KEY'
+                : wc.publishableKey
+                  ? ' · MPP card: add STRIPE keys (+ profile for issued)'
+                  : ' · MPP card: add STRIPE_PUBLISHABLE_KEY';
+          statusEl.textContent =
+            (j.openai ? 'OpenAI ready' : 'OpenAI not configured') +
+            ' · ' +
+            j.toolNames.length +
+            ' tool(s) · manifest: ' +
+            j.manifestPath +
+            wbit;
+        } catch (e) {
+          statusEl.textContent = 'Could not reach agent API';
+        }
+      }
+
+      const walletLine = document.getElementById('walletLine');
+      const walletErr = document.getElementById('walletErr');
+      const walletForm = document.getElementById('walletForm');
+      const walletMount = document.getElementById('walletMount');
+      const walletAdd = document.getElementById('walletAdd');
+      const walletSave = document.getElementById('walletSave');
+      const walletCancel = document.getElementById('walletCancel');
+      const walletClear = document.getElementById('walletClear');
+      const walletBarStatus = document.getElementById('walletBarStatus');
+      const walletBarSpent = document.getElementById('walletBarSpent');
+      const walletBarMeta = document.getElementById('walletBarMeta');
+      const walletSpendLine = document.getElementById('walletSpendLine');
+      const walletModal = document.getElementById('walletModal');
+      const walletModalBackdrop = document.getElementById('walletModalBackdrop');
+      const walletModalClose = document.getElementById('walletModalClose');
+      const walletTopUpOpen = document.getElementById('walletTopUpOpen');
+      const negInfoModal = document.getElementById('negInfoModal');
+      const negInfoModalBackdrop = document.getElementById('negInfoModalBackdrop');
+      const negInfoModalClose = document.getElementById('negInfoModalClose');
+      const negInfoOpen = document.getElementById('negInfoOpen');
+
+      /** @type {Record<string, unknown> | null} */
+      let lastWalletStatus = null;
+
+      function formatMoneyFromCents(cents, currency) {
+        const cur = (currency || 'usd').toString().toUpperCase();
+        const n = typeof cents === 'number' && !Number.isNaN(cents) ? cents : 0;
+        try {
+          return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur }).format(n / 100);
+        } catch (_) {
+          return (n / 100).toFixed(2) + ' ' + cur;
+        }
+      }
+
+      let stripeSdk = null;
+      let stripeElements = null;
+      let stripePaymentEl = null;
+
+      function loadStripeJs() {
+        if (window.Stripe) return Promise.resolve();
+        return new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://js.stripe.com/v3/';
+          s.async = true;
+          s.onload = () => resolve();
+          s.onerror = () => reject(new Error('Could not load Stripe.js'));
+          document.head.appendChild(s);
+        });
+      }
+
+      function updateNegSpendBar(spend) {
+        if (!spend) return;
+        const cur = (lastWalletStatus && lastWalletStatus.currency) || 'usd';
+        const spent = formatMoneyFromCents(spend.spentCents ?? 0, cur);
+        const count = typeof spend.toolCallCount === 'number' ? spend.toolCallCount : 0;
+        if (negSpendAmount) negSpendAmount.textContent = spent;
+        if (negToolCount) {
+          negToolCount.textContent =
+            count === 0 ? '0 tool calls' : count + ' tool call' + (count === 1 ? '' : 's');
+        }
+      }
+
+      /** Pull live negotiation spend from server (survives SSE gaps / Walk). */
+      async function refreshNegSpendFromServer() {
+        try {
+          const r = await fetch('/api/negotiation/spend', { credentials: 'include' });
+          if (!r.ok) return null;
+          const spend = await r.json();
+          updateNegSpendBar(spend);
+          return spend;
+        } catch {
+          return null;
+        }
+      }
+
+      async function refreshWalletLine() {
+        try {
+          const r = await fetch('/api/wallet/status', { credentials: 'include' });
+          const s = await r.json();
+          lastWalletStatus = s;
+          if (walletErr) walletErr.style.display = 'none';
+
+          const cur = (s.currency || 'usd').toString().toLowerCase();
+          const spent = formatMoneyFromCents(s.spentCents ?? 0, cur);
+          const count = typeof s.toolCallCount === 'number' ? s.toolCallCount : 0;
+          const perTool = formatMoneyFromCents(s.perToolCostCents ?? 50, cur);
+
+          if (walletBarSpent) walletBarSpent.textContent = spent;
+          if (walletSpendLine) {
+            walletSpendLine.textContent =
+              count === 0
+                ? 'No paid property tools yet this session (' + perTool.replace(/^\s*/, '') + ' each).'
+                : count + ' paid tool call' + (count === 1 ? '' : 's') + ' · ~' + perTool.replace(/^\s*/, '') + ' each';
+          }
+
+          if (s.stripe === false) {
+            const needProfile = s.sptMintMode !== 'test_helper';
+            const cfgMsg = needProfile
+              ? 'Stripe not configured — set STRIPE keys + MPP_SELLER_NETWORK_BUSINESS_PROFILE in .env.'
+              : 'Stripe not configured — set STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY in .env.';
+            if (walletBarStatus) {
+              walletBarStatus.textContent = 'Not configured';
+              walletBarStatus.className = 'wallet-bar-status';
+            }
+            if (walletBarMeta) walletBarMeta.textContent = cfgMsg;
+            if (walletLine) walletLine.textContent = cfgMsg;
+            if (walletAdd) walletAdd.disabled = true;
+            if (walletTopUpOpen) walletTopUpOpen.disabled = true;
+            return;
+          }
+
+          if (walletAdd) walletAdd.disabled = false;
+          if (walletTopUpOpen) {
+            walletTopUpOpen.disabled = false;
+            walletTopUpOpen.textContent = s.ready ? 'Manage card' : 'Add payment method';
+          }
+
+          if (s.ready && s.last4) {
+            const cardShort = (s.brand || 'card') + ' ·••• ' + s.last4;
+            if (walletBarStatus) {
+              walletBarStatus.textContent = cardShort;
+              walletBarStatus.className = 'wallet-bar-status ready';
+            }
+            if (walletBarMeta) {
+              walletBarMeta.textContent =
+                count > 0
+                  ? 'Charged via MPP SPT from ' + cardShort
+                  : 'Card saved — property tools will charge ~' + perTool.replace(/^\s*/, '') + ' per call';
+            }
+            if (walletLine) walletLine.textContent = 'Card on file: ' + cardShort;
+          } else {
+            if (walletBarStatus) {
+              walletBarStatus.textContent = 'No card saved';
+              walletBarStatus.className = 'wallet-bar-status';
+            }
+            if (walletBarMeta) {
+              walletBarMeta.textContent =
+                count > 0
+                  ? 'Spent ' + spent + ' this session — add a card for more tool calls'
+                  : 'Add a card to unlock paid property dossier tools';
+            }
+            if (walletLine) {
+              walletLine.textContent = 'No card in this session — add one below to use MPP property tools.';
+            }
+          }
+        } catch (e) {
+          if (walletBarSpent) walletBarSpent.textContent = '—';
+          if (walletBarStatus) walletBarStatus.textContent = 'Unavailable';
+          if (walletBarMeta) walletBarMeta.textContent = 'Could not load payment status.';
+          if (walletLine) walletLine.textContent = 'Could not load payment status.';
+        }
+      }
+
+      async function startCardSetup() {
+        if (walletErr) walletErr.style.display = 'none';
+        try {
+          await loadStripeJs();
+          const r = await fetch('/api/wallet/setup-intent', { method: 'POST', credentials: 'include' });
+          const j = await r.json();
+          if (!r.ok) throw new Error(j.error || r.statusText);
+          const { clientSecret, publishableKey } = j;
+          teardownWalletForm();
+          stripeSdk = window.Stripe(publishableKey);
+          stripeElements = stripeSdk.elements({ clientSecret });
+          stripePaymentEl = stripeElements.create('payment');
+          if (walletMount) walletMount.innerHTML = '';
+          const mount = document.createElement('div');
+          mount.id = 'wallet-element';
+          walletMount.appendChild(mount);
+          stripePaymentEl.mount('#wallet-element');
+          if (walletForm) walletForm.style.display = 'block';
+        } catch (e) {
+          if (walletErr) {
+            walletErr.style.display = 'block';
+            walletErr.textContent = String(e.message || e);
+          }
+        }
+      }
+
+      async function openWalletModal() {
+        if (!walletModal) return;
+        walletModal.hidden = false;
+        document.body.style.overflow = 'hidden';
+        await refreshWalletLine();
+        const st = lastWalletStatus;
+        if (st && st.stripe !== false && !st.ready && walletForm && walletForm.style.display === 'none') {
+          await startCardSetup();
+        }
+      }
+
+      function closeWalletModal() {
+        if (!walletModal) return;
+        walletModal.hidden = true;
+        document.body.style.overflow = '';
+        teardownWalletForm();
+        if (walletErr) walletErr.style.display = 'none';
+      }
+
+      function openNegInfoModal() {
+        if (!negInfoModal) return;
+        negInfoModal.hidden = false;
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeNegInfoModal() {
+        if (!negInfoModal) return;
+        negInfoModal.hidden = true;
+        if (!walletModal || walletModal.hidden) document.body.style.overflow = '';
+      }
+
+      if (walletTopUpOpen) walletTopUpOpen.addEventListener('click', openWalletModal);
+      if (walletModalClose) walletModalClose.addEventListener('click', closeWalletModal);
+      if (walletModalBackdrop) walletModalBackdrop.addEventListener('click', closeWalletModal);
+      if (negInfoOpen) negInfoOpen.addEventListener('click', openNegInfoModal);
+      if (negInfoModalClose) negInfoModalClose.addEventListener('click', closeNegInfoModal);
+      if (negInfoModalBackdrop) negInfoModalBackdrop.addEventListener('click', closeNegInfoModal);
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        if (walletModal && !walletModal.hidden) closeWalletModal();
+        else if (negInfoModal && !negInfoModal.hidden) closeNegInfoModal();
+      });
+
+      function teardownWalletForm() {
+        if (stripePaymentEl) {
+          try {
+            stripePaymentEl.unmount();
+          } catch (_) {}
+          stripePaymentEl = null;
+        }
+        stripeElements = null;
+        stripeSdk = null;
+        if (walletMount) walletMount.innerHTML = '';
+        if (walletForm) walletForm.style.display = 'none';
+      }
+
+      walletAdd.addEventListener('click', () => startCardSetup());
+
+      walletSave.addEventListener('click', async () => {
+        if (!stripeSdk || !stripeElements) return;
+        walletErr.style.display = 'none';
+        try {
+          const { error, setupIntent } = await stripeSdk.confirmSetup({
+            elements: stripeElements,
+            redirect: 'if_required',
+            confirmParams: {
+              return_url: window.location.origin + window.location.pathname,
+            },
+          });
+          if (error) throw new Error(error.message);
+          if (!setupIntent || !setupIntent.id) throw new Error('No setupIntent returned');
+          const cr = await fetch('/api/wallet/confirm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ setupIntentId: setupIntent.id }),
+          });
+          const cj = await cr.json();
+          if (!cr.ok) throw new Error(cj.error || cr.statusText);
+          teardownWalletForm();
+          await refreshWalletLine();
+        } catch (e) {
+          if (walletErr) {
+            walletErr.style.display = 'block';
+            walletErr.textContent = String(e.message || e);
+          }
+        }
+      });
+
+      walletCancel.addEventListener('click', () => teardownWalletForm());
+
+      walletClear.addEventListener('click', async () => {
+        if (walletErr) walletErr.style.display = 'none';
+        try {
+          await fetch('/api/wallet/clear', { method: 'POST', credentials: 'include' });
+          teardownWalletForm();
+          await refreshWalletLine();
+        } catch (e) {
+          if (walletErr) {
+            walletErr.style.display = 'block';
+            walletErr.textContent = String(e.message || e);
+          }
+        }
+      });
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = '';
+        const myGen = ++chatStreamGen;
+        const roleForTurn = chatAgentRole;
+        append('user', text);
+        chatMessages[roleForTurn].push({ role: 'user', content: text });
+        sendBtn.disabled = true;
+        const pendingWrap = appendAgentPending();
+        /** @type {string[]} */
+        const liveActivity = [];
+        /** @type {{ content?: string, activity?: { text: string }[], error?: string } | null} */
+        let donePayload = null;
+        try {
+          const r = await fetch('/api/chat/stream', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ messages: chatMessages[roleForTurn], agentRole: roleForTurn }),
+          });
+
+          if (!r.ok) {
+            const t = await r.text();
+            let msg = t;
+            try {
+              msg = JSON.parse(t).error || msg;
+            } catch (_) {}
+            throw new Error(msg || r.statusText);
+          }
+
+          const reader = r.body && r.body.getReader();
+          if (!reader) throw new Error('No response body');
+
+          await consumeSseStream(reader, async (evt) => {
+            if (myGen !== chatStreamGen) return;
+            if (evt.type === 'activity' && evt.step && evt.step.text) {
+              liveActivity.push(evt.step.text);
+              updatePendingActivity(pendingWrap, liveActivity, true);
+            } else if (evt.type === 'spend_refresh') {
+              await refreshWalletLine();
+            } else if (evt.type === 'done') {
+              donePayload = evt;
+            } else if (evt.type === 'error') {
+              throw new Error(evt.error || 'Unknown error');
+            }
+          });
+
+          if (!donePayload) throw new Error('Stream ended without a reply');
+          pendingWrap.remove();
+          const reply = donePayload.content || '';
+          const activity = donePayload.activity || liveActivity.map((text) => ({ text }));
+          if (myGen !== chatStreamGen || roleForTurn !== chatAgentRole) return;
+          await appendAssistantTurn(reply, activity, myGen);
+          chatMessages[roleForTurn].push({ role: 'assistant', content: reply });
+        } catch (err) {
+          pendingWrap.remove();
+          if (myGen === chatStreamGen && roleForTurn === chatAgentRole) {
+            append('err', String(err.message || err));
+          }
+        } finally {
+          sendBtn.disabled = false;
+          input.focus();
+          refreshWalletLine();
+        }
+      });
+
+      const negOut = document.getElementById('negOut');
+      const negRun = document.getElementById('negRun');
+      const negWalk = document.getElementById('negWalk');
+      const negGoal = document.getElementById('negGoal');
+      const negSpendAmount = document.getElementById('negSpendAmount');
+      const negToolCount = document.getElementById('negToolCount');
+      const panelChat = document.getElementById('panel-chat');
+      const panelNeg = document.getElementById('panel-neg');
+
+      /** @type {HTMLElement | null} */
+      let negJudgePanelEl = null;
+
+      function removeNegJudgePanel() {
+        if (negJudgePanelEl) {
+          negJudgePanelEl.remove();
+          negJudgePanelEl = null;
+        }
+      }
+
+      function showJudgePending() {
+        removeNegJudgePanel();
+        negJudgePanelEl = document.createElement('div');
+        negJudgePanelEl.className = 'neg-judge-panel pending';
+        negJudgePanelEl.textContent = 'Submitting to negotiation judge…';
+        negOut.appendChild(negJudgePanelEl);
+        scrollToBottomIfPinned(negOut);
+      }
+
+      const JUDGE_SCORE_LABELS = {
+        price_outcome: 'Price outcome',
+        decision_quality: 'Decision quality',
+        information_acquisition: 'Information acquisition',
+        evidence_utilization: 'Evidence utilization',
+        negotiation_quality: 'Negotiation quality',
+        economic_efficiency: 'Economic efficiency',
+        persistence_creativity: 'Persistence & creativity',
+      };
+
+      function judgeScoreMax(j) {
+        return typeof j.score_max === 'number' ? j.score_max : 70;
+      }
+
+      /** @param {unknown} item */
+      function formatMissedOpportunity(item) {
+        if (typeof item === 'string') return item;
+        if (!item || typeof item !== 'object') return String(item);
+        const o = /** @type {Record<string, string>} */ (item);
+        let line = '';
+        if (o.severity) line += '[' + o.severity.toUpperCase() + '] ';
+        line += o.description || '';
+        if (o.seller_clue && o.seller_clue !== 'none') line += ' — Seller clue: "' + o.seller_clue + '"';
+        if (o.suggested_tool && o.suggested_tool !== 'n/a') line += ' — Tool: ' + o.suggested_tool;
+        if (o.why_it_matters) line += ' — ' + o.why_it_matters;
+        if (o.estimated_leverage_usd) line += ' (Est. leverage: ' + o.estimated_leverage_usd + ')';
+        return line;
+      }
+
+      /** @param {string} rating */
+      function judgeRatingClass(rating) {
+        return String(rating || 'poor').toLowerCase().replace(/\s+/g, '-');
+      }
+
+      /** @param {Record<string, unknown>} j */
+      function appendJudgeResult(j) {
+        removeNegJudgePanel();
+        negJudgePanelEl = document.createElement('div');
+        negJudgePanelEl.className = 'neg-judge-panel';
+
+        const head = document.createElement('div');
+        head.className = 'neg-judge-head';
+        const title = document.createElement('h3');
+        title.textContent = 'Judge score';
+        head.appendChild(title);
+
+        if (typeof j.overall_score === 'number') {
+          const overall = document.createElement('span');
+          overall.innerHTML = '<strong>' + j.overall_score + '</strong> / ' + judgeScoreMax(j);
+          head.appendChild(overall);
+        }
+        if (j.rating) {
+          const badge = document.createElement('span');
+          badge.className = 'neg-judge-rating ' + judgeRatingClass(String(j.rating));
+          badge.textContent = String(j.rating);
+          head.appendChild(badge);
+        }
+        negJudgePanelEl.appendChild(head);
+
+        if (j.metrics && typeof j.metrics === 'object') {
+          const m = j.metrics;
+          const meta = document.createElement('p');
+          meta.className = 'neg-meta';
+          const bits = [];
+          if (typeof m.evidence_density === 'number') bits.push('Evidence density: ' + m.evidence_density + '/turn');
+          if (typeof m.roi_savings_per_mpp_dollar === 'number') bits.push('ROI: ' + m.roi_savings_per_mpp_dollar + '× savings/spend');
+          if (typeof m.leverage_source_count === 'number') bits.push('Leverage sources: ' + m.leverage_source_count);
+          if (bits.length) {
+            meta.textContent = bits.join(' · ');
+            negJudgePanelEl.appendChild(meta);
+          }
+        }
+
+        if (j.scores && typeof j.scores === 'object') {
+          const grid = document.createElement('div');
+          grid.className = 'neg-judge-scores';
+          for (const [key, label] of Object.entries(JUDGE_SCORE_LABELS)) {
+            if (!(key in j.scores)) continue;
+            const row = document.createElement('div');
+            row.className = 'neg-judge-score-row';
+            row.innerHTML = '<span>' + escapeHtml(label) + '</span><strong>' + escapeHtml(String(j.scores[key])) + '/10</strong>';
+            grid.appendChild(row);
+          }
+          negJudgePanelEl.appendChild(grid);
+        }
+
+        const fb = j.feedback && typeof j.feedback === 'object' ? j.feedback : null;
+        if (fb) {
+          const lists = document.createElement('div');
+          lists.className = 'neg-judge-lists';
+          if (fb.summary) {
+            const p = document.createElement('p');
+            p.style.margin = '0 0 0.5rem';
+            p.textContent = String(fb.summary);
+            lists.appendChild(p);
+          }
+          function addList(title, items) {
+            if (!Array.isArray(items) || !items.length) return;
+            const h = document.createElement('h4');
+            h.textContent = title;
+            lists.appendChild(h);
+            const ul = document.createElement('ul');
+            for (const item of items) {
+              const li = document.createElement('li');
+              li.textContent = String(item);
+              ul.appendChild(li);
+            }
+            lists.appendChild(ul);
+          }
+          addList('Strengths', fb.strengths);
+          addList('Weaknesses', fb.weaknesses);
+          if (Array.isArray(fb.missed_opportunities) && fb.missed_opportunities.length) {
+            const h = document.createElement('h4');
+            h.textContent = 'Missed opportunities';
+            lists.appendChild(h);
+            const ul = document.createElement('ul');
+            for (const item of fb.missed_opportunities) {
+              const li = document.createElement('li');
+              li.textContent = formatMissedOpportunity(item);
+              ul.appendChild(li);
+            }
+            lists.appendChild(ul);
+          }
+          addList('Coaching tips', fb.coaching_tips);
+          negJudgePanelEl.appendChild(lists);
+        }
+
+        const lbLink = document.createElement('p');
+        lbLink.className = 'neg-meta';
+        lbLink.style.marginTop = '0.65rem';
+        lbLink.innerHTML =
+          '<a href="/leaderboard.html" style="color:var(--accent);font-weight:600">View leaderboard</a>';
+        negJudgePanelEl.appendChild(lbLink);
+
+        negOut.appendChild(negJudgePanelEl);
+        scrollToBottomIfPinned(negOut);
+      }
+
+      function showJudgeError(msg) {
+        removeNegJudgePanel();
+        negJudgePanelEl = document.createElement('div');
+        negJudgePanelEl.className = 'neg-judge-panel err';
+        negJudgePanelEl.textContent = 'Judge: ' + msg;
+        negOut.appendChild(negJudgePanelEl);
+        scrollToBottomIfPinned(negOut);
+      }
+
+      /** @type {boolean | null} */
+      let judgeConfigured = null;
+
+      async function isJudgeConfigured() {
+        if (judgeConfigured != null) return judgeConfigured;
+        try {
+          const r = await fetch('/api/negotiation/judge-config', { credentials: 'include' });
+          const j = await r.json();
+          judgeConfigured = !!j.configured;
+        } catch {
+          judgeConfigured = false;
+        }
+        return judgeConfigured;
+      }
+
+      /**
+       * @param {Record<string, unknown>} negResult
+       * @param {string} mandate
+       * @param {number} streamGen
+       */
+      function showJudgeSkipped() {
+        removeNegJudgePanel();
+        negJudgePanelEl = document.createElement('div');
+        negJudgePanelEl.className = 'neg-judge-panel err';
+        negJudgePanelEl.innerHTML =
+          '<strong>Judge scoring not configured.</strong> Set <code>JUDGE_SERVICE_URL</code> in repo root <code>.env</code> ' +
+          '(run <code>npm run buyer:sync-env</code> to pull from AWS, or <code>npm run judge-service:dev</code> for local). ' +
+          'Restart the buyer agent after updating env.';
+        negOut.appendChild(negJudgePanelEl);
+        scrollToBottomIfPinned(negOut);
+      }
+
+      async function requestJudgeEvaluation(negResult, mandate, streamGen) {
+        if (!(await isJudgeConfigured())) {
+          if (streamGen === negStreamGen) showJudgeSkipped();
+          return;
+        }
+        showJudgePending();
+        try {
+          const r = await fetch('/api/negotiation/judge', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              ...negResult,
+              buyerGoal: mandate,
+            }),
+          });
+          if (streamGen !== negStreamGen) return;
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok) {
+            showJudgeError(j.error || r.statusText || 'Request failed');
+            return;
+          }
+          appendJudgeResult(j);
+          const entryId = typeof j.entryId === 'string' ? j.entryId : '';
+          const link = negJudgePanelEl && negJudgePanelEl.querySelector('a[href="/leaderboard.html"]');
+          if (link && entryId) {
+            link.href = '/leaderboard.html?id=' + encodeURIComponent(entryId);
+            link.textContent = 'View on leaderboard';
+          } else if (link && j.leaderboard_persist_error) {
+            link.textContent = 'Leaderboard save failed — ' + j.leaderboard_persist_error;
+          }
+        } catch (err) {
+          if (streamGen !== negStreamGen) return;
+          showJudgeError(String(err.message || err));
+        }
+      }
+
+      /** @param {Record<string, unknown>} j */
+      function formatNegOutcome(j) {
+        const o = (j.outcome || '').toLowerCase();
+        if (o === 'agreed') {
+          const who = j.endedBy === 'seller' ? 'seller accepted' : j.endedBy === 'buyer' ? 'buyer accepted' : 'deal reached';
+          return 'Agreed (' + who + ')';
+        }
+        if (o === 'walked') {
+          if (j.endedBy === 'user') return 'Walked (you clicked Walk)';
+          if (j.endedBy === 'seller') return 'Walked (seller ended — STATUS: WALKED on last line)';
+          if (j.endedBy === 'buyer') return 'Walked (buyer ended — STATUS: WALKED on last line)';
+          return 'Walked';
+        }
+        if (o === 'max_rounds') return 'Round cap (15 buyer turns — no STATUS line)';
+        return j.outcome || 'unknown';
+      }
+
+      /** @param {Record<string, unknown>} j */
+      function appendOutcome(j) {
+        const head = document.createElement('p');
+        head.className = 'neg-meta';
+        head.style.marginTop = '0.75rem';
+        head.style.paddingTop = '0.75rem';
+        head.style.borderTop = '1px solid var(--border)';
+        head.innerHTML =
+          '<strong>Outcome:</strong> ' +
+          escapeHtml(formatNegOutcome(j)) +
+          ' · <strong>Buyer turns:</strong> ' +
+          (j.roundsCompleted ?? '?') +
+          ' · <strong>Who opened:</strong> ' +
+          escapeHtml(j.whoStarts || '');
+        if (j.negotiationSpend) {
+          const cur = (lastWalletStatus && lastWalletStatus.currency) || 'usd';
+          const spent = formatMoneyFromCents(j.negotiationSpend.spentCents ?? 0, cur);
+          const count = j.negotiationSpend.toolCallCount ?? 0;
+          head.innerHTML +=
+            ' · <strong>MPP cost:</strong> ' +
+            escapeHtml(spent) +
+            ' · <strong>Tools:</strong> ' +
+            count;
+        }
+        NegotiationChat.ensureThread(negOut).appendChild(head);
+        scrollToBottomIfPinned(negOut);
+      }
+
+      document.querySelectorAll('.tab[data-tab]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const tab = btn.getAttribute('data-tab');
+          document.querySelectorAll('.tab[data-tab]').forEach((b) => {
+            const on = b.getAttribute('data-tab') === tab;
+            b.classList.toggle('active', on);
+            b.setAttribute('aria-selected', on ? 'true' : 'false');
+          });
+          panelChat.classList.toggle('active', tab === 'chat');
+          panelNeg.classList.toggle('active', tab === 'neg');
+        });
+      });
+
+      if (negRun) negRun.addEventListener('click', async () => {
+        const buyerGoal = negGoal.value.trim();
+        if (!buyerGoal) {
+          negOut.textContent = 'Enter a buyer mandate first.';
+          panelNeg.classList.add('active');
+          panelChat.classList.remove('active');
+          document.querySelectorAll('.tab[data-tab]').forEach((b) => {
+            const on = b.getAttribute('data-tab') === 'neg';
+            b.classList.toggle('active', on);
+            b.setAttribute('aria-selected', on ? 'true' : 'false');
+          });
+          return;
+        }
+        negRun.disabled = true;
+        if (negWalk) negWalk.disabled = false;
+        negOut.innerHTML = '';
+        removeNegJudgePanel();
+        updateNegSpendBar({ spentCents: 0, toolCallCount: 0 });
+        /** @type {{ speaker: string, text: string, round?: number, buyerActivity?: unknown[] }[]} */
+        const negLiveTranscript = [];
+        const myNegGen = ++negStreamGen;
+        const negAbort = new AbortController();
+        let walkHandled = false;
+
+        function finishWalk() {
+          if (walkHandled || myNegGen !== negStreamGen) return;
+          walkHandled = true;
+          clearTyping();
+          const buyerTurns = negOut.querySelectorAll('.neg-msg.buyer:not(.neg-trace-msg)').length;
+          const note = document.createElement('p');
+          note.className = 'neg-meta';
+          note.style.marginTop = '0.75rem';
+          note.textContent = 'You chose to walk — negotiation stopped.';
+          NegotiationChat.ensureThread(negOut).appendChild(note);
+          scrollToBottomIfPinned(negOut);
+          refreshNegSpendFromServer().then((spend) => {
+            const outcome = {
+              outcome: 'walked',
+              endedBy: 'user',
+              roundsCompleted: buyerTurns,
+              whoStarts: 'buyer',
+              negotiationSpend: spend || undefined,
+              transcript: negLiveTranscript.slice(),
+            };
+            appendOutcome(outcome);
+            requestJudgeEvaluation(outcome, buyerGoal, myNegGen);
+          });
+        }
+
+        if (negWalk) {
+          negWalk.onclick = () => {
+            if (myNegGen !== negStreamGen || walkHandled) return;
+            negStreamGen++;
+            negAbort.abort();
+            finishWalk();
+          };
+        }
+
+        /** Whether we already showed buyer internal steps via SSE (skip duplicate block on final buyer bubble). */
+        let streamedBuyerSteps = false;
+        /** @type {number | null} */
+        let buyerTraceRound = null;
+        /** @type {HTMLDivElement | null} */
+        let buyerTraceLinesEl = null;
+        /** @type {HTMLDivElement | null} */
+        let buyerTraceRoot = null;
+
+        /** @type {HTMLElement | null} */
+        let typingEl = null;
+
+        /** @type {number | null} */
+        let lastDisplayedRound = null;
+
+        function setTyping(message) {
+          if (typingEl) typingEl.remove();
+          typingEl = document.createElement('p');
+          typingEl.className = 'neg-status neg-typing';
+          typingEl.textContent = message;
+          NegotiationChat.ensureThread(negOut).appendChild(typingEl);
+          scrollToBottomIfPinned(negOut);
+        }
+
+        function clearTyping() {
+          if (typingEl) {
+            typingEl.remove();
+            typingEl = null;
+          }
+        }
+
+        function appendBuyerTraceLine(round, step) {
+          streamedBuyerSteps = true;
+          if (buyerTraceRound !== round) {
+            buyerTraceRound = round;
+            clearTyping();
+            const thread = NegotiationChat.ensureThread(negOut);
+            const wrap = document.createElement('div');
+            wrap.className = 'neg-msg buyer neg-trace-msg';
+            const avatar = document.createElement('div');
+            avatar.className = 'neg-avatar dim';
+            avatar.textContent = 'B';
+            avatar.setAttribute('aria-hidden', 'true');
+            const col = document.createElement('div');
+            col.className = 'neg-msg-col';
+            const card = document.createElement('div');
+            card.className = 'neg-trace-card';
+            const title = document.createElement('div');
+            title.className = 'neg-trace-title';
+            title.textContent = 'Buyer · reasoning / tools';
+            const lines = document.createElement('div');
+            lines.className = 'neg-trace-lines';
+            card.appendChild(title);
+            card.appendChild(lines);
+            col.appendChild(card);
+            wrap.appendChild(avatar);
+            wrap.appendChild(col);
+            thread.appendChild(wrap);
+            buyerTraceRoot = wrap;
+            buyerTraceLinesEl = lines;
+          }
+          const line = document.createElement('div');
+          line.className = 'neg-trace-line';
+          line.textContent = '· ' + (step && step.text ? step.text : '');
+          if (buyerTraceLinesEl) buyerTraceLinesEl.appendChild(line);
+          scrollToBottomIfPinned(negOut);
+        }
+
+        async function appendNegMessage(evt) {
+          const round = typeof evt.round === 'number' ? evt.round : null;
+          if (round != null && round !== lastDisplayedRound) {
+            if (lastDisplayedRound != null || round > 1) {
+              NegotiationChat.appendRoundDivider(negOut, round);
+            }
+            lastDisplayedRound = round;
+          }
+          const skipDupActivity =
+            evt.speaker === 'buyer' && streamedBuyerSteps && evt.buyerActivity && evt.buyerActivity.length;
+          const built = NegotiationChat.appendMessage(negOut, {
+            speaker: evt.speaker,
+            text: evt.text || '',
+            round: round ?? undefined,
+            buyerActivity: evt.buyerActivity,
+            skipActivity: !!skipDupActivity,
+          });
+          scrollToBottomIfPinned(negOut);
+          await typewriterReveal(built.bodyEl, evt.text || '', negOut, () => myNegGen !== negStreamGen);
+        }
+
+        async function handleNegSseEvent(evt) {
+          if (myNegGen !== negStreamGen || walkHandled) return;
+          if (evt.type === 'status') setTyping(evt.message || '…');
+          else if (evt.type === 'negotiation_spend') updateNegSpendBar(evt);
+          else if (evt.type === 'spend_refresh') {
+            if (evt.negotiation) updateNegSpendBar(evt.negotiation);
+            else await refreshNegSpendFromServer();
+            await refreshWalletLine();
+          } else if (evt.type === 'buyer_trace') {
+            const r = typeof evt.round === 'number' ? evt.round : null;
+            if (r != null) appendBuyerTraceLine(r, evt.step);
+            if (evt.step && evt.step.t === 'tool_result') await refreshNegSpendFromServer();
+          } else if (evt.type === 'message') {
+            clearTyping();
+            negLiveTranscript.push({
+              speaker: evt.speaker,
+              text: evt.text || '',
+              round: evt.round,
+              buyerActivity: evt.buyerActivity,
+            });
+            await appendNegMessage(evt);
+            if (evt.speaker === 'buyer') streamedBuyerSteps = false;
+          } else if (evt.type === 'done') {
+            clearTyping();
+            let spend = evt.negotiationSpend;
+            if (spend) updateNegSpendBar(spend);
+            else spend = await refreshNegSpendFromServer();
+            appendOutcome(evt);
+            requestJudgeEvaluation(
+              {
+                ...evt,
+                transcript: Array.isArray(evt.transcript) && evt.transcript.length ? evt.transcript : negLiveTranscript.slice(),
+                negotiationSpend: spend || evt.negotiationSpend,
+              },
+              buyerGoal,
+              myNegGen
+            );
+          } else if (evt.type === 'error') {
+            clearTyping();
+            const errP = document.createElement('p');
+            errP.className = 'msg err';
+            errP.textContent = evt.error || 'Unknown error';
+            NegotiationChat.ensureThread(negOut).appendChild(errP);
+            scrollToBottomIfPinned(negOut);
+          }
+        }
+
+        setTyping('Starting negotiation…');
+
+        try {
+          const r = await fetch('/api/negotiation/run-stream', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            signal: negAbort.signal,
+            body: JSON.stringify({ buyerGoal, maxRounds: NEG_MAX_ROUNDS }),
+          });
+
+          if (!r.ok) {
+            const t = await r.text();
+            let msg = t;
+            try {
+              msg = JSON.parse(t).error || msg;
+            } catch (_) {}
+            throw new Error(msg || r.statusText);
+          }
+
+          const reader = r.body && r.body.getReader();
+          if (!reader) throw new Error('No response body');
+
+          await consumeSseStream(reader, handleNegSseEvent);
+        } catch (err) {
+          if (walkHandled || myNegGen !== negStreamGen || err.name === 'AbortError') return;
+          const errP = document.createElement('p');
+          errP.className = 'msg err';
+          errP.textContent = String(err.message || err);
+          NegotiationChat.ensureThread(negOut).appendChild(errP);
+          scrollToBottomIfPinned(negOut);
+        } finally {
+          if (myNegGen === negStreamGen) {
+            negRun.disabled = false;
+            if (negWalk) {
+              negWalk.disabled = true;
+              negWalk.onclick = null;
+            }
+          }
+          await refreshNegSpendFromServer();
+          refreshWalletLine();
+        }
+      });
+
+      refreshMeta();
+      refreshWalletLine();
+      input.focus();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,297 @@
+/* Chat-style negotiation thread — buyer left, seller right */
+
+main:has(#panel-neg.active) {
+  max-width: 52rem;
+}
+
+.neg-thread-container {
+  min-height: 14rem;
+  max-height: 58vh;
+  overflow: auto;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.12) 0%, var(--panel) 100%);
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  padding: 1rem 0.85rem;
+}
+
+.neg-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.neg-round-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0.35rem 0;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.neg-round-divider::before,
+.neg-round-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.neg-msg {
+  display: flex;
+  gap: 0.55rem;
+  max-width: 92%;
+  animation: negMsgIn 0.28s ease-out;
+}
+
+@keyframes negMsgIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.neg-msg.buyer {
+  align-self: flex-start;
+  flex-direction: row;
+}
+
+.neg-msg.seller {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.neg-avatar {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  margin-top: 0.15rem;
+}
+
+.neg-msg.buyer .neg-avatar {
+  background: rgba(124, 158, 255, 0.22);
+  color: #a8c4ff;
+  border: 1px solid rgba(124, 158, 255, 0.45);
+}
+
+.neg-msg.seller .neg-avatar {
+  background: rgba(201, 184, 138, 0.18);
+  color: #dcc99a;
+  border: 1px solid rgba(201, 184, 138, 0.4);
+}
+
+.neg-avatar.dim {
+  opacity: 0.55;
+  font-size: 0.65rem;
+}
+
+.neg-msg-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.neg-msg-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.5rem;
+  font-size: 0.68rem;
+}
+
+.neg-msg.buyer .neg-msg-head {
+  justify-content: flex-start;
+}
+
+.neg-msg.seller .neg-msg-head {
+  justify-content: flex-end;
+}
+
+.neg-msg-name {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.neg-msg.buyer .neg-msg-name {
+  color: var(--accent);
+}
+
+.neg-msg.seller .neg-msg-name {
+  color: #c9b88a;
+}
+
+.neg-msg-round {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.neg-bubble {
+  border-radius: 0.85rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.neg-msg.buyer .neg-bubble {
+  background: rgba(124, 158, 255, 0.1);
+  border-color: rgba(124, 158, 255, 0.28);
+  border-top-left-radius: 0.25rem;
+}
+
+.neg-msg.seller .neg-bubble {
+  background: rgba(201, 184, 138, 0.1);
+  border-color: rgba(201, 184, 138, 0.28);
+  border-top-right-radius: 0.25rem;
+}
+
+.neg-bubble-body {
+  word-break: break-word;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.neg-bubble-body.rich-text {
+  white-space: normal;
+}
+
+.neg-bubble-body.rich-text .md-line {
+  margin: 0.3rem 0;
+}
+
+.neg-bubble-body.rich-text .price-tag {
+  color: #a5d6a7;
+  font-weight: 600;
+}
+
+.neg-bubble-body .status-line {
+  margin-top: 0.55rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.neg-bubble-body .status-line.status-agreed {
+  background: rgba(76, 175, 80, 0.18);
+  color: #a5d6a7;
+  border: 1px solid rgba(76, 175, 80, 0.35);
+}
+
+.neg-bubble-body .status-line.status-walked {
+  background: rgba(239, 154, 154, 0.15);
+  color: #ef9a9a;
+  border: 1px solid rgba(239, 154, 154, 0.35);
+}
+
+.neg-tools {
+  margin-top: 0.15rem;
+  max-width: 100%;
+}
+
+.neg-tools summary {
+  cursor: pointer;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--muted);
+  list-style: none;
+  user-select: none;
+}
+
+.neg-tools summary::-webkit-details-marker {
+  display: none;
+}
+
+.neg-tools summary::before {
+  content: '▸ ';
+}
+
+.neg-tools[open] summary::before {
+  content: '▾ ';
+}
+
+.neg-tools-body {
+  margin-top: 0.35rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 0.45rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px dashed var(--border);
+  font-size: 0.68rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: var(--muted);
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+
+.neg-trace-msg {
+  max-width: 88%;
+  opacity: 0.92;
+}
+
+.neg-trace-card {
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.55rem;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px dashed rgba(124, 158, 255, 0.25);
+  font-size: 0.68rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: var(--muted);
+}
+
+.neg-trace-card .neg-trace-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  margin-bottom: 0.25rem;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+.neg-trace-line {
+  margin-top: 0.15rem;
+  line-height: 1.35;
+}
+
+.neg-status {
+  align-self: center;
+  max-width: 90%;
+  margin: 0.25rem 0;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-style: italic;
+  color: var(--muted);
+  background: rgba(124, 158, 255, 0.08);
+  border: 1px dashed var(--border);
+  text-align: center;
+}
+
+.neg-status.neg-typing {
+  animation: negPulse 1.15s ease-in-out infinite;
+}
+
+/* Legacy outcome / judge blocks inside thread */
+.neg-thread .neg-meta,
+.neg-thread .neg-judge-panel,
+.neg-thread .msg.err {
+  align-self: stretch;
+  max-width: 100%;
+}

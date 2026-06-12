@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Negotiation leaderboard — Agent lab</title>
+    <link rel="stylesheet" href="/lib/negotiation-chat.css" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0f1117;
+        --panel: #1a1d26;
+        --border: #2d3340;
+        --text: #e8eaed;
+        --muted: #9aa0a6;
+        --accent: #7c9eff;
+        --row-hover: rgba(124, 158, 255, 0.08);
+        --row-selected: rgba(124, 158, 255, 0.16);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        padding: 1.5rem;
+      }
+      .wrap {
+        max-width: 56rem;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .top-nav {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+      }
+      .top-nav a {
+        color: var(--accent);
+        text-decoration: none;
+        font-size: 0.88rem;
+        font-weight: 600;
+      }
+      .top-nav a:hover {
+        text-decoration: underline;
+      }
+      h1 {
+        margin: 0;
+        font-size: 1.45rem;
+      }
+      .meta {
+        font-size: 0.82rem;
+        color: var(--muted);
+        line-height: 1.45;
+        margin: 0;
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+      }
+      button {
+        font: inherit;
+        cursor: pointer;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--text);
+        padding: 0.4rem 0.75rem;
+        font-size: 0.82rem;
+      }
+      button:hover {
+        border-color: var(--accent);
+      }
+      button.danger {
+        color: #ef9a9a;
+      }
+      .table-wrap {
+        overflow: auto;
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        background: var(--panel);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.84rem;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 0.65rem 0.75rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      th {
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+        background: rgba(0, 0, 0, 0.2);
+        position: sticky;
+        top: 0;
+      }
+      tr.lb-row {
+        cursor: pointer;
+      }
+      tr.lb-row:hover td {
+        background: var(--row-hover);
+      }
+      tr.lb-row.selected td {
+        background: var(--row-selected);
+      }
+      tr.lb-row:last-child td {
+        border-bottom: none;
+      }
+      .rank {
+        font-weight: 700;
+        color: var(--accent);
+        width: 2.5rem;
+      }
+      .score-strong {
+        font-weight: 700;
+      }
+      .mandate-preview {
+        max-width: 14rem;
+        color: var(--muted);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .badge {
+        display: inline-block;
+        padding: 0.12rem 0.45rem;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+      }
+      .badge.elite { background: #3d3520; color: #ffe082; }
+      .badge.strong { background: #1a3328; color: #a5d6a7; }
+      .badge.competent { background: #1e2a3a; color: #90caf9; }
+      .badge.weak { background: #3a2a1e; color: #ffcc80; }
+      .badge.poor { background: #3a1e1e; color: #ef9a9a; }
+      .empty {
+        padding: 2rem 1rem;
+        text-align: center;
+        color: var(--muted);
+      }
+      #detailPanel {
+        display: none;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      #detailPanel.visible {
+        display: flex;
+      }
+      .detail-section {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        padding: 1rem 1.1rem;
+      }
+      .detail-section h2 {
+        margin: 0 0 0.65rem;
+        font-size: 0.95rem;
+      }
+      .detail-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem 1rem;
+        font-size: 0.82rem;
+        color: var(--muted);
+        margin-bottom: 0.75rem;
+      }
+      .mandate-block {
+        white-space: pre-wrap;
+        font-size: 0.88rem;
+        line-height: 1.5;
+        padding: 0.75rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 0.5rem;
+        border: 1px solid var(--border);
+      }
+      .judge-scores {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+        gap: 0.45rem;
+        margin: 0.65rem 0;
+      }
+      .judge-score-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding: 0.4rem 0.55rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 0.4rem;
+        font-size: 0.8rem;
+      }
+      .judge-lists h3 {
+        margin: 0.85rem 0 0.35rem;
+        font-size: 0.82rem;
+        color: var(--muted);
+      }
+      .judge-lists ul {
+        margin: 0;
+        padding-left: 1.15rem;
+        font-size: 0.84rem;
+        line-height: 1.45;
+      }
+      .judge-headline {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.5rem 1rem;
+        margin-bottom: 0.5rem;
+      }
+      .judge-headline .overall {
+        font-size: 1.25rem;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="top-nav">
+        <div>
+          <h1>Negotiation leaderboard</h1>
+          <p class="meta">Ranked by judge score (highest overall / max first). Stored in AWS DynamoDB.</p>
+        </div>
+        <a href="/index.html">← Back to agent lab</a>
+      </div>
+
+      <div class="toolbar">
+        <span class="meta" id="entryCount">Loading…</span>
+        <button type="button" id="btnRefresh">Refresh</button>
+      </div>
+      <p class="meta err" id="lbErr" hidden></p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>When</th>
+              <th>Outcome</th>
+              <th>Score</th>
+              <th>Rating</th>
+              <th>Buyer mandate</th>
+            </tr>
+          </thead>
+          <tbody id="lbBody"></tbody>
+        </table>
+        <div class="empty" id="lbEmpty" hidden>No scored negotiations yet. Run one on the agent lab and wait for the judge.</div>
+      </div>
+
+      <div id="detailPanel" aria-live="polite">
+        <div class="detail-section">
+          <h2>Buyer mandate</h2>
+          <div class="detail-meta" id="detailMeta"></div>
+          <div class="mandate-block" id="detailMandate"></div>
+        </div>
+
+        <div class="detail-section">
+          <h2>Judge score &amp; feedback</h2>
+          <div id="detailJudge"></div>
+        </div>
+
+        <div class="detail-section">
+          <h2>Transcript</h2>
+          <div id="detailTranscript" class="neg-thread-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/lib/negotiation-chat.js"></script>
+    <script src="/lib/leaderboard-store.js"></script>
+    <script>
+      const JUDGE_SCORE_LABELS = {
+        price_outcome: 'Price outcome',
+        decision_quality: 'Decision quality',
+        information_acquisition: 'Information acquisition',
+        evidence_utilization: 'Evidence utilization',
+        negotiation_quality: 'Negotiation quality',
+        economic_efficiency: 'Economic efficiency',
+        persistence_creativity: 'Persistence & creativity',
+      };
+
+      function judgeScoreMax(j) {
+        return typeof j.score_max === 'number' ? j.score_max : j.scores && j.scores.decision_quality != null ? 70 : 60;
+      }
+
+      function formatMissedOpportunity(item) {
+        if (typeof item === 'string') return item;
+        if (!item || typeof item !== 'object') return String(item);
+        let line = '';
+        if (item.severity) line += '[' + String(item.severity).toUpperCase() + '] ';
+        line += item.description || '';
+        if (item.seller_clue && item.seller_clue !== 'none') line += ' — Seller clue: "' + item.seller_clue + '"';
+        if (item.suggested_tool && item.suggested_tool !== 'n/a') line += ' — Tool: ' + item.suggested_tool;
+        if (item.why_it_matters) line += ' — ' + item.why_it_matters;
+        if (item.estimated_leverage_usd) line += ' (Est. leverage: ' + item.estimated_leverage_usd + ')';
+        return line;
+      }
+
+      const lbBody = document.getElementById('lbBody');
+      const lbEmpty = document.getElementById('lbEmpty');
+      const entryCount = document.getElementById('entryCount');
+      const detailPanel = document.getElementById('detailPanel');
+      const detailMeta = document.getElementById('detailMeta');
+      const detailMandate = document.getElementById('detailMandate');
+      const detailJudge = document.getElementById('detailJudge');
+      const detailTranscript = document.getElementById('detailTranscript');
+
+      /** @type {string | null} */
+      let selectedId = null;
+
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function ratingClass(rating) {
+        return String(rating || 'poor').toLowerCase().replace(/\s+/g, '-');
+      }
+
+      function formatWhen(iso) {
+        try {
+          return new Date(iso).toLocaleString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+          });
+        } catch {
+          return iso;
+        }
+      }
+
+      function formatOutcome(entry) {
+        const o = (entry.outcome || '').toLowerCase();
+        if (o === 'agreed') return 'Agreed';
+        if (o === 'walked') return 'Walked';
+        if (o === 'max_rounds') return 'Round cap';
+        return entry.outcome || '—';
+      }
+
+      function formatJudgeScore(j) {
+        if (typeof j.overall_score !== 'number') return '—';
+        return j.overall_score + '/' + judgeScoreMax(j);
+      }
+
+      function renderJudgeDetail(judge) {
+        if (!judge || typeof judge !== 'object') {
+          detailJudge.innerHTML = '<p class="meta">No judge data.</p>';
+          return;
+        }
+
+        const parts = [];
+        parts.push('<div class="judge-headline">');
+        if (typeof judge.overall_score === 'number') {
+          parts.push('<span class="overall">' + formatJudgeScore(judge) + '</span>');
+        }
+        if (judge.rating) {
+          parts.push(
+            '<span class="badge ' +
+              escapeHtml(ratingClass(String(judge.rating))) +
+              '">' +
+              escapeHtml(String(judge.rating)) +
+              '</span>'
+          );
+        }
+        parts.push('</div>');
+
+        if (judge.feedback && judge.feedback.summary) {
+          parts.push('<p class="meta" style="color:var(--text)">' + escapeHtml(String(judge.feedback.summary)) + '</p>');
+        }
+
+        if (judge.metrics && typeof judge.metrics === 'object') {
+          const m = judge.metrics;
+          const bits = [];
+          if (typeof m.evidence_density === 'number') bits.push('Evidence density: ' + m.evidence_density + '/turn');
+          if (typeof m.roi_savings_per_mpp_dollar === 'number') bits.push('ROI: ' + m.roi_savings_per_mpp_dollar + '×');
+          if (typeof m.leverage_source_count === 'number') bits.push('Leverage sources: ' + m.leverage_source_count);
+          if (bits.length) parts.push('<p class="meta">' + escapeHtml(bits.join(' · ')) + '</p>');
+        }
+
+        if (judge.scores && typeof judge.scores === 'object') {
+          parts.push('<div class="judge-scores">');
+          for (const [key, label] of Object.entries(JUDGE_SCORE_LABELS)) {
+            if (!(key in judge.scores)) continue;
+            parts.push(
+              '<div class="judge-score-row"><span>' +
+                escapeHtml(label) +
+                '</span><strong>' +
+                escapeHtml(String(judge.scores[key])) +
+                '/10</strong></div>'
+            );
+          }
+          parts.push('</div>');
+        }
+
+        const fb = judge.feedback && typeof judge.feedback === 'object' ? judge.feedback : null;
+        if (fb) {
+          parts.push('<div class="judge-lists">');
+          function addList(title, items) {
+            if (!Array.isArray(items) || !items.length) return;
+            parts.push('<h3>' + escapeHtml(title) + '</h3><ul>');
+            for (const item of items) {
+              const text = title === 'Missed opportunities' ? formatMissedOpportunity(item) : String(item);
+              parts.push('<li>' + escapeHtml(text) + '</li>');
+            }
+            parts.push('</ul>');
+          }
+          addList('Strengths', fb.strengths);
+          addList('Weaknesses', fb.weaknesses);
+          addList('Missed opportunities', fb.missed_opportunities);
+          addList('Coaching tips', fb.coaching_tips);
+          parts.push('</div>');
+        }
+
+        detailJudge.innerHTML = parts.join('');
+      }
+
+      function renderTranscript(transcript) {
+        NegotiationChat.renderTranscript(detailTranscript, transcript);
+      }
+
+      function showDetail(id) {
+        selectedId = id;
+        document.querySelectorAll('tr.lb-row').forEach((tr) => {
+          tr.classList.toggle('selected', tr.getAttribute('data-id') === id);
+        });
+        detailPanel.classList.add('visible');
+        detailMandate.textContent = 'Loading…';
+        detailMeta.textContent = '';
+        detailJudge.innerHTML = '<p class="meta">Loading…</p>';
+        detailTranscript.innerHTML = '';
+
+        AgentLeaderboardStore.get(id)
+          .then((entry) => {
+            if (!entry) {
+              detailMandate.textContent = 'Entry not found.';
+              return;
+            }
+            detailMandate.textContent = entry.buyerMandate || '(no mandate recorded)';
+
+            const metaBits = [
+              'Saved ' + formatWhen(entry.savedAt),
+              'Outcome: ' + formatOutcome(entry),
+              'Buyer turns: ' + (entry.roundsCompleted ?? '—'),
+            ];
+            const j = entry.judge || {};
+            if (typeof j.final_price_usd === 'number') {
+              metaBits.push('Final price: $' + j.final_price_usd.toLocaleString('en-US'));
+            }
+            if (typeof j.savings_usd === 'number') {
+              metaBits.push('Savings vs ask: $' + j.savings_usd.toLocaleString('en-US'));
+            }
+            if (typeof j.mpp_spend_usd === 'number') {
+              metaBits.push('MPP spend: $' + j.mpp_spend_usd.toFixed(2));
+            }
+            detailMeta.textContent = metaBits.join(' · ');
+
+            renderJudgeDetail(entry.judge);
+            renderTranscript(entry.transcript);
+            detailPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          })
+          .catch((err) => {
+            detailMandate.textContent = String(err.message || err);
+          });
+      }
+
+      async function renderTable() {
+        const lbErr = document.getElementById('lbErr');
+        lbErr.hidden = true;
+        entryCount.textContent = 'Loading…';
+        lbBody.innerHTML = '';
+
+        try {
+          const entries = await AgentLeaderboardStore.list();
+          entryCount.textContent =
+            entries.length === 1 ? '1 run saved' : entries.length + ' runs saved';
+          lbEmpty.hidden = entries.length > 0;
+
+          entries.forEach((entry, idx) => {
+            const tr = document.createElement('tr');
+            tr.className = 'lb-row';
+            tr.setAttribute('data-id', entry.id);
+            if (entry.id === selectedId) tr.classList.add('selected');
+
+            const j = entry.judge || {};
+            const mandate = entry.buyerMandate || '';
+            tr.innerHTML =
+              '<td class="rank">' +
+              (idx + 1) +
+              '</td>' +
+              '<td>' +
+              escapeHtml(formatWhen(entry.savedAt)) +
+              '</td>' +
+              '<td>' +
+              escapeHtml(formatOutcome(entry)) +
+              '</td>' +
+              '<td class="score-strong">' +
+              escapeHtml(formatJudgeScore(j)) +
+              '</td>' +
+              '<td>' +
+              (j.rating
+                ? '<span class="badge ' +
+                  escapeHtml(ratingClass(String(j.rating))) +
+                  '">' +
+                  escapeHtml(String(j.rating)) +
+                  '</span>'
+                : '—') +
+              '</td>' +
+              '<td><div class="mandate-preview">' +
+              escapeHtml(mandate || '—') +
+              '</div></td>';
+
+            tr.addEventListener('click', () => showDetail(entry.id));
+            lbBody.appendChild(tr);
+          });
+
+          if (selectedId && !entries.some((e) => e.id === selectedId)) {
+            selectedId = null;
+            detailPanel.classList.remove('visible');
+          }
+        } catch (err) {
+          entryCount.textContent = 'Could not load leaderboard';
+          lbErr.textContent = String(err.message || err);
+          lbErr.hidden = false;
+          lbEmpty.hidden = false;
+          lbEmpty.textContent = 'Could not load entries from DynamoDB.';
+        }
+      }
+
+      document.getElementById('btnRefresh').addEventListener('click', () => renderTable());
+
+      const params = new URLSearchParams(location.search);
+      const openId = params.get('id');
+      renderTable().then(() => {
+        if (openId) showDetail(openId);
+      });
+    </script>
+  </body>
+</html>
