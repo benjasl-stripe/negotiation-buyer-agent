@@ -5,10 +5,12 @@
   "type": "module",
   "description": "Workshop buyer agent + browser UI — connects to deployed platform services",
   "scripts": {
+    "setup": "node scripts/setup-env.mjs",
     "dev": "node --watch server.js",
     "start": "node server.js",
     "tools:list": "node scripts/list-tools.mjs",
     "tools:list:json": "node scripts/list-tools.mjs --json",
+    "tools:discover": "node scripts/tools-discover.mjs",
     "wallet:print-profile": "node scripts/print-network-business-profile.mjs",
     "buyer:check": "node scripts/buyer-check.mjs",
     "buyer:sync-env": "node scripts/sync-buyer-env.mjs"
@@ -16,9 +18,9 @@
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "express": "^4.18.2",
+    "express": "^5.1.0",
     "express-session": "^1.18.1",
-    "mppx": "^0.6.30",
+    "mppx": "0.6.30",
     "stripe": "^17.7.0",
     "viem": "^2.52.2"
   }

@@ -1,7 +1,7 @@
 import express from 'express';
 import { isOpenAIConfigured, openAiMode } from '../lib/openai.js';
 import { isExternalSellerEnabled } from '../lib/seller-client.js';
-import { isJudgeServiceEnabled, remoteJudgeEvaluate } from '../lib/judge-client.js';
+import { isJudgeServiceEnabled, remoteEventsList, remoteJudgeEvaluate } from '../lib/judge-client.js';
 import { buildJudgePayload } from '../lib/negotiation-judge-payload.js';
 import { runNegotiation } from '../lib/negotiation.js';
 import { createMppInvokeBinder, getNegotiationSpendSummary } from '../lib/agent-wallet.js';
@@ -13,6 +13,19 @@ router.get('/judge-config', (_req, res) => {
     configured: isJudgeServiceEnabled(),
     endpoint: isJudgeServiceEnabled() ? 'POST /api/negotiation/judge' : null,
   });
+});
+
+router.get('/events', async (_req, res) => {
+  if (!isJudgeServiceEnabled()) {
+    return res.status(503).json({ error: 'JUDGE_SERVICE_URL is not set' });
+  }
+  try {
+    const data = await remoteEventsList();
+    return res.json(data);
+  } catch (e) {
+    console.error('[judge events]', e);
+    return res.status(502).json({ error: e instanceof Error ? e.message : String(e) });
+  }
 });
 
 router.post('/judge', async (req, res) => {

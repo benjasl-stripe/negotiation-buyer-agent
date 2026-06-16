@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "comment": "Discover-only schema. Intentionally different from tools.manifest.json.",
+  "entries": [
+    {
+      "key": "property_seller_disclosure",
+      "label": "Seller disclosure",
+      "route": "/api/property/disclosure",
+      "payment": "paid",
+      "when_to_use": "Structure, systems, claims, easements, and disclosure-driven leverage."
+    },
+    {
+      "key": "property_hoa_packet",
+      "label": "HOA packet",
+      "route": "/api/property/hoa",
+      "payment": "paid",
+      "when_to_use": "Dues, assessments, STR limits, and HOA constraints affecting value."
+    },
+    {
+      "key": "property_title_preliminary",
+      "label": "Preliminary title",
+      "route": "/api/property/title-preliminary",
+      "payment": "paid",
+      "when_to_use": "Liens, exceptions, easements, and chain-of-title concerns."
+    },
+    {
+      "key": "property_inspection_report",
+      "label": "Inspection report",
+      "route": "/api/property/inspection",
+      "payment": "paid",
+      "when_to_use": "Condition issues, repair estimates, safety risks, and credits."
+    },
+    {
+      "key": "property_tax_history",
+      "label": "Tax history",
+      "route": "/api/property/tax-history",
+      "payment": "paid",
+      "when_to_use": "Assessment trend, tax burden, and carrying-cost arguments."
+    },
+    {
+      "key": "property_flood_hazard",
+      "label": "Flood and hazard",
+      "route": "/api/property/flood-hazard",
+      "payment": "paid",
+      "when_to_use": "Insurance risk, flood/wildfire/drainage concerns."
+    },
+    {
+      "key": "property_comparable_sales",
+      "label": "Comparable sales",
+      "route": "/api/property/comparable-sales",
+      "payment": "paid",
+      "when_to_use": "Anchoring valuation and challenging asking price with market evidence."
+    },
+    {
+      "key": "property_schools",
+      "label": "Schools snapshot",
+      "route": "/api/property/schools",
+      "payment": "free",
+      "when_to_use": "Starter/free tool for assignment, rezoning, and buyer demand signals."
+    },
+    {
+      "key": "property_utilities_energy",
+      "label": "Utilities and energy",
+      "route": "/api/property/utilities-energy",
+      "payment": "paid",
+      "when_to_use": "Operating costs and monthly budget pressure."
+    },
+    {
+      "key": "property_permits_renovations",
+      "label": "Permits and renovations",
+      "route": "/api/property/permits-renovations",
+      "payment": "paid",
+      "when_to_use": "Renovation quality, open permits, and compliance risks."
+    }
+  ]
+}

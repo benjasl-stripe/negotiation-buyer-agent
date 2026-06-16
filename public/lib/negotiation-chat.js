@@ -84,6 +84,9 @@
    *   round?: number,
    *   buyerActivity?: unknown[],
    *   skipActivity?: boolean,
+   *   buyerLabel?: string,
+   *   sellerLabel?: string,
+   *   speakerLabel?: string,
    * }} opts
    */
   function buildMessage(opts) {
@@ -103,7 +106,8 @@
     head.className = 'neg-msg-head';
     const name = document.createElement('span');
     name.className = 'neg-msg-name';
-    name.textContent = isBuyer ? 'Buyer agent' : 'Seller agent';
+    name.textContent =
+      opts.speakerLabel || (isBuyer ? opts.buyerLabel || 'Buyer agent' : opts.sellerLabel || 'Seller agent');
     head.appendChild(name);
     if (typeof opts.round === 'number') {
       const round = document.createElement('span');
@@ -145,7 +149,7 @@
 
   /**
    * @param {HTMLElement} container
-   * @param {{ speaker: string, text?: string, round?: number, buyerActivity?: unknown[], skipActivity?: boolean }} opts
+   * @param {{ speaker: string, text?: string, round?: number, buyerActivity?: unknown[], skipActivity?: boolean, buyerLabel?: string, sellerLabel?: string, speakerLabel?: string }} opts
    */
   function appendMessage(container, opts) {
     const thread = ensureThread(container);
@@ -157,8 +161,9 @@
   /**
    * @param {HTMLElement} container
    * @param {unknown[]} transcript
+   * @param {{ buyerLabel?: string, sellerLabel?: string }} [labels]
    */
-  function renderTranscript(container, transcript) {
+  function renderTranscript(container, transcript, labels) {
     container.innerHTML = '';
     const thread = document.createElement('div');
     thread.className = 'neg-thread';
@@ -187,6 +192,9 @@
         text: row.text || '',
         round: round ?? undefined,
         buyerActivity: row.buyerActivity ?? row.buyer_activity,
+        buyerLabel: labels && labels.buyerLabel,
+        sellerLabel: labels && labels.sellerLabel,
+        speakerLabel: row.speakerLabel || row.speaker_label,
       });
       applyRichText(built.bodyEl, row.text || '');
       thread.appendChild(built.root);

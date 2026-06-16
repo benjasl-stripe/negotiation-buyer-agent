@@ -30,15 +30,87 @@
       }
       main {
         width: 100%;
-        max-width: 44rem;
+        max-width: 62rem;
         display: flex;
         flex-direction: column;
         gap: 1rem;
+      }
+      .app-layout {
+        display: grid;
+        grid-template-columns: 12rem minmax(0, 1fr);
+        gap: 1rem;
+        align-items: start;
       }
       .tabbar {
         display: flex;
         gap: 0.35rem;
         flex-wrap: wrap;
+      }
+      .side-menu {
+        flex-direction: column;
+        flex-wrap: nowrap;
+        position: sticky;
+        top: 1.25rem;
+        gap: 0.6rem;
+      }
+      .side-history {
+        border: 1px solid var(--border);
+        background: var(--panel);
+        border-radius: 0.65rem;
+        padding: 0.55rem;
+      }
+      .side-history h3 {
+        margin: 0 0 0.35rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+      }
+      .side-history-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        max-height: 52vh;
+        overflow: auto;
+      }
+      .side-history-empty {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.76rem;
+        line-height: 1.35;
+      }
+      .side-history-item {
+        width: 100%;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.18);
+        color: var(--text);
+        border-radius: 0.5rem;
+        padding: 0.45rem 0.5rem;
+        text-align: left;
+        cursor: pointer;
+      }
+      .side-history-item:hover {
+        border-color: var(--accent);
+      }
+      .side-history-item.active {
+        border-color: var(--accent);
+        background: rgba(124, 158, 255, 0.12);
+      }
+      .side-history-item .title {
+        display: block;
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .side-history-item .meta {
+        display: block;
+        margin-top: 0.2rem;
+        font-size: 0.69rem;
+        color: var(--muted);
+      }
+      .workspace-panels {
+        min-width: 0;
       }
       .tab {
         border: 1px solid var(--border);
@@ -58,6 +130,10 @@
         color: var(--text);
         border-color: var(--accent);
         background: rgba(124, 158, 255, 0.12);
+      }
+      .side-menu .tab {
+        width: 100%;
+        text-align: left;
       }
       .role-toggle {
         display: flex;
@@ -228,6 +304,19 @@
         color: var(--text);
         padding: 0.35rem 0.5rem;
         font: inherit;
+      }
+      input[type='text'] {
+        border-radius: 0.5rem;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--text);
+        padding: 0.4rem 0.55rem;
+        font: inherit;
+      }
+      #agentNameInput.required-missing {
+        border-color: #ef9a9a;
+        background: rgba(244, 67, 54, 0.14);
+        box-shadow: 0 0 0 2px rgba(244, 67, 54, 0.25);
       }
       h1 {
         font-size: 1.25rem;
@@ -597,6 +686,48 @@
       .neg-spend-bar .neg-spend-tools {
         color: var(--muted);
       }
+      .neg-spend-bar .neg-status-group {
+        margin-left: auto;
+        align-items: center;
+        gap: 0.45rem 0.7rem;
+      }
+      .neg-spend-bar .neg-status-value {
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        padding: 0.22rem 0.55rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .neg-spend-bar .neg-status-value.ready {
+        color: #b8c9ff;
+        border-color: rgba(124, 158, 255, 0.65);
+        background: rgba(124, 158, 255, 0.18);
+      }
+      .neg-spend-bar .neg-status-value.status-scoring {
+        color: #ffe082;
+        border-color: rgba(255, 224, 130, 0.75);
+        background: rgba(255, 224, 130, 0.15);
+        animation: judgePulse 1.05s ease-in-out infinite;
+      }
+      .neg-spend-bar .neg-status-value.status-running {
+        color: #90caf9;
+        border-color: rgba(144, 202, 249, 0.7);
+        background: rgba(144, 202, 249, 0.14);
+      }
+      .neg-spend-bar .neg-status-value.status-error {
+        color: #ef9a9a;
+        border-color: rgba(239, 154, 154, 0.75);
+        background: rgba(239, 154, 154, 0.14);
+      }
+      @keyframes judgePulse {
+        50% {
+          opacity: 0.6;
+        }
+      }
       .neg-judge-panel {
         margin-top: 0.85rem;
         padding: 0.85rem 1rem;
@@ -673,6 +804,20 @@
       .neg-judge-lists li {
         margin: 0.2rem 0;
       }
+      @media (max-width: 860px) {
+        .app-layout {
+          grid-template-columns: 1fr;
+        }
+        .side-menu {
+          position: static;
+          flex-direction: row;
+          flex-wrap: wrap;
+        }
+        .side-menu .tab {
+          width: auto;
+          text-align: center;
+        }
+      }
     </style>
     <link rel="stylesheet" href="/lib/negotiation-chat.css" />
   </head>
@@ -688,6 +833,16 @@
         <span style="color: var(--muted)"> · ranked by judge score (AWS DynamoDB)</span>
       </div>
       <p class="meta" id="status">Loading…</p>
+      <div class="row-inline" style="margin-top: -0.45rem; align-items: center; gap: 0.55rem; flex-wrap: wrap">
+        <label for="agentNameInput">Agent name</label>
+        <input type="text" id="agentNameInput" maxlength="40" placeholder="Buyer agent" />
+        <label for="negEventSelect" class="meta" style="margin: 0 0 0 0.35rem">Competing event</label>
+        <select id="negEventSelect" style="min-width: 220px">
+          <option value="">Loading events…</option>
+        </select>
+        <button type="button" class="btn-ghost" id="negEventRefresh">Refresh</button>
+      </div>
+      <p class="meta" id="negEventState" style="margin: -0.35rem 0 0">Pick an event before running negotiation.</p>
 
       <div class="wallet-bar" id="walletBar" aria-live="polite">
         <div class="wallet-bar-main">
@@ -704,46 +859,65 @@
         </div>
       </div>
 
-      <div class="tabbar" role="tablist">
-        <button type="button" class="tab active" data-tab="chat" role="tab" aria-selected="true">Practice chat</button>
-        <button type="button" class="tab" data-tab="neg" role="tab" aria-selected="false">Run vs seller</button>
-      </div>
-
-      <div id="panel-chat" class="panel active" role="tabpanel">
-        <div class="role-toggle" role="group" aria-label="Practice chat agent">
-          <span class="role-toggle-label">Chat with</span>
-          <button type="button" class="role-btn active" data-chat-role="buyer" aria-pressed="true">Buyer agent</button>
-          <button type="button" class="role-btn" data-chat-role="seller" aria-pressed="false">Seller agent</button>
-        </div>
-        <div id="log"></div>
-        <form id="f">
-          <textarea id="input" placeholder="Message the buyer agent…" rows="2"></textarea>
-          <button type="submit" id="send">Send</button>
-        </form>
-        <p class="meta" id="chatRoleHint">
-          <strong>Buyer agent</strong> can call tools from <code>tools.manifest.json</code>. After edits, restart
-          <code>npm run dev</code> or POST <code>/api/chat/reload-manifest</code>.
-        </p>
-      </div>
-
-      <div id="panel-neg" class="panel" role="tabpanel">
-        <div class="neg-controls">
-          <label for="negGoal" class="meta" style="display: block">Buyer mandate (what you want the buyer agent to achieve)</label>
-          <textarea id="negGoal" rows="4"></textarea>
-          <div class="row-inline">
-            <button type="button" id="negRun">Run negotiation</button>
-            <button type="button" class="btn-walk" id="negWalk" disabled title="Stop the negotiation — you walk away">Walk</button>
-            <button type="button" class="btn-info" id="negInfoOpen" aria-label="How negotiation works" title="How negotiation works">i</button>
+      <div class="app-layout">
+        <div class="tabbar side-menu" role="tablist" aria-orientation="vertical">
+          <button type="button" class="tab active" data-tab="chat" role="tab" aria-selected="true">Practice chat</button>
+          <button type="button" class="tab" data-tab="neg" role="tab" aria-selected="false">Run vs seller</button>
+          <div class="side-history">
+            <h3>Your previous runs</h3>
+            <div id="userHistoryList" class="side-history-list"></div>
+            <p id="userHistoryEmpty" class="side-history-empty">No runs yet in this browser session history.</p>
           </div>
         </div>
-        <div id="negSpendBar" class="neg-spend-bar" aria-live="polite">
-          <div class="neg-bar-group">
-            <span class="neg-spend-label">This negotiation</span>
-            <span class="neg-spend-amount" id="negSpendAmount">$0.00</span>
-            <span class="neg-spend-tools" id="negToolCount">0 tool calls</span>
+
+        <div class="workspace-panels">
+          <div id="panel-chat" class="panel active" role="tabpanel">
+            <div class="role-toggle" role="group" aria-label="Practice chat agent">
+              <span class="role-toggle-label">Chat with</span>
+              <button type="button" class="role-btn active" data-chat-role="buyer" aria-pressed="true">Buyer agent</button>
+              <button type="button" class="role-btn" data-chat-role="seller" aria-pressed="false">Seller agent</button>
+            </div>
+            <div id="log"></div>
+            <form id="f">
+              <textarea id="input" placeholder="Message the buyer agent…" rows="2"></textarea>
+              <button type="submit" id="send">Send</button>
+            </form>
+            <p class="meta" id="chatRoleHint">
+              <strong>Buyer agent</strong> can call tools from <code>tools.manifest.json</code>. After edits, restart
+              <code>npm run dev</code> or POST <code>/api/chat/reload-manifest</code>.
+            </p>
           </div>
+
+          <div id="panel-neg" class="panel" role="tabpanel">
+            <div class="neg-controls">
+              <label for="negGoal" class="meta" style="display: block">Buyer mandate (what you want the buyer agent to achieve)</label>
+              <textarea id="negGoal" rows="4"></textarea>
+              <div class="row-inline">
+                <button type="button" class="btn-ghost" id="negSavePrompt">Save prompt</button>
+                <button type="button" id="negRun" disabled>Run negotiation</button>
+                <button type="button" class="btn-walk" id="negWalk" disabled title="Stop the negotiation — you walk away">Walk</button>
+                <button type="button" class="btn-info" id="negInfoOpen" aria-label="How negotiation works" title="How negotiation works">i</button>
+              </div>
+              <p class="meta" id="negPromptState" style="margin: 0">
+                Save your mandate prompt first. Run is enabled only when the saved prompt matches the text box.
+              </p>
+            </div>
+            <div id="negSpendBar" class="neg-spend-bar" aria-live="polite">
+              <div class="neg-bar-group">
+                <span class="neg-spend-label">This negotiation</span>
+                <span class="neg-spend-amount" id="negSpendAmount">$0.00</span>
+                <span class="neg-spend-tools" id="negToolCount">0 tool calls</span>
+              </div>
+              <div class="neg-bar-group neg-status-group">
+                <span class="neg-spend-label">Status</span>
+                <span class="neg-status-value" id="negJudgeStatus">Waiting for run to finish</span>
+                <button type="button" class="btn-ghost" id="negJudgeOpen" disabled>View judge</button>
+              </div>
+            </div>
+            <div id="negOut" class="neg-thread-container"></div>
+          </div>
+
         </div>
-        <div id="negOut" class="neg-thread-container"></div>
       </div>
 
       <div id="negInfoModal" class="wallet-modal" hidden role="dialog" aria-modal="true" aria-labelledby="negInfoModalTitle">
@@ -760,6 +934,17 @@
             <strong>seller always runs on seller-service</strong> (e.g. facilitator Lambda). Set <code>SELLER_SERVICE_URL</code> (and optional <code>SELLER_SERVICE_KEY</code>) in the buyer
             <code>.env</code> — facilitator provides deployed service URLs. Without <code>SELLER_SERVICE_URL</code>, negotiation returns an error. Each <strong>buyer turn</strong> may run several internal model/tool steps before the message to the seller; those steps stream live below as <em>Buyer · reasoning / tools</em>.
           </p>
+        </div>
+      </div>
+
+      <div id="judgeModal" class="wallet-modal" hidden role="dialog" aria-modal="true" aria-labelledby="judgeModalTitle">
+        <div class="wallet-modal-backdrop" id="judgeModalBackdrop"></div>
+        <div class="wallet-modal-panel">
+          <div class="wallet-modal-head">
+            <h2 id="judgeModalTitle">Negotiation judge</h2>
+            <button type="button" class="wallet-modal-close" id="judgeModalClose" aria-label="Close">×</button>
+          </div>
+          <div id="judgeModalBody" class="neg-judge-panel" style="margin-top: 0"></div>
         </div>
       </div>
 
@@ -802,15 +987,53 @@
       const input = document.getElementById('input');
       const sendBtn = document.getElementById('send');
       const chatRoleHint = document.getElementById('chatRoleHint');
+      const agentNameInput = document.getElementById('agentNameInput');
 
       /** @type {'buyer' | 'seller'} */
       let chatAgentRole = 'buyer';
       const chatMessages = { buyer: [], seller: [] };
       /** @type {{ buyer: { kind: string, text: string, activity?: { text: string }[] }[], seller: { kind: string, text: string, activity?: { text: string }[] }[] }} */
       const chatDisplay = { buyer: [], seller: [] };
+      const NEG_MANDATE_STORAGE_KEY = 'buyerNegMandateSavedV1';
+      const NEG_HISTORY_STORAGE_KEY = 'buyerNegHistoryV1';
+      const BUYER_AGENT_NAME_STORAGE_KEY = 'buyerAgentDisplayNameV1';
+      const NEG_EVENT_STORAGE_KEY = 'buyerNegEventIdV1';
 
       function chatAgentLabel(role = chatAgentRole) {
-        return role === 'seller' ? 'Seller agent' : 'Buyer agent';
+        if (role === 'seller') return 'Seller agent';
+        const custom = (window.localStorage.getItem(BUYER_AGENT_NAME_STORAGE_KEY) || '').trim();
+        return custom || 'Buyer agent';
+      }
+
+      function buyerAgentName() {
+        return chatAgentLabel('buyer');
+      }
+
+      function hasCustomBuyerAgentName() {
+        return !!(window.localStorage.getItem(BUYER_AGENT_NAME_STORAGE_KEY) || '').trim();
+      }
+
+      function randomId(prefix) {
+        return (
+          prefix +
+          '_' +
+          Date.now().toString(36) +
+          '_' +
+          Math.random().toString(36).slice(2, 8)
+        );
+      }
+
+      function formatShortTime(iso) {
+        try {
+          return new Date(iso).toLocaleString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+          });
+        } catch {
+          return iso || '';
+        }
       }
 
       function updateChatRoleUi() {
@@ -829,6 +1052,34 @@
               ? '<strong>Seller agent</strong> uses the same persona as negotiation (1842 Hawthorne Ridge Rd). No tools — practice making offers and asking questions as the buyer.'
               : '<strong>Buyer agent</strong> can call tools from <code>tools.manifest.json</code>. After edits, restart <code>npm run dev</code> or POST <code>/api/chat/reload-manifest</code>.';
         }
+      }
+
+      function syncBuyerAgentNameInput() {
+        if (!agentNameInput) return;
+        const current = (window.localStorage.getItem(BUYER_AGENT_NAME_STORAGE_KEY) || '').trim();
+        agentNameInput.value = current;
+      }
+
+      function updateAgentNameRequirementUi() {
+        const missing = !hasCustomBuyerAgentName();
+        if (agentNameInput) {
+          agentNameInput.classList.toggle('required-missing', missing);
+          agentNameInput.setAttribute('aria-invalid', missing ? 'true' : 'false');
+          agentNameInput.title = missing ? 'Agent name is required before chatting.' : '';
+        }
+        if (input) input.disabled = missing;
+        if (sendBtn) sendBtn.disabled = missing;
+      }
+
+      function persistBuyerAgentName() {
+        if (!agentNameInput) return;
+        const next = (agentNameInput.value || '').trim();
+        if (next) window.localStorage.setItem(BUYER_AGENT_NAME_STORAGE_KEY, next);
+        else window.localStorage.removeItem(BUYER_AGENT_NAME_STORAGE_KEY);
+        updateChatRoleUi();
+        renderChatLog();
+        updateAgentNameRequirementUi();
+        updateNegPromptUi();
       }
 
       function renderChatLog() {
@@ -856,8 +1107,15 @@
           setChatAgentRole(btn.getAttribute('data-chat-role'));
         });
       });
+      if (agentNameInput) {
+        syncBuyerAgentNameInput();
+        agentNameInput.addEventListener('input', persistBuyerAgentName);
+        agentNameInput.addEventListener('change', persistBuyerAgentName);
+        agentNameInput.addEventListener('blur', persistBuyerAgentName);
+      }
 
       updateChatRoleUi();
+      updateAgentNameRequirementUi();
 
       const SCROLL_NEAR_BOTTOM_PX = 80;
       let chatStreamGen = 0;
@@ -1184,6 +1442,10 @@
       const negInfoModalBackdrop = document.getElementById('negInfoModalBackdrop');
       const negInfoModalClose = document.getElementById('negInfoModalClose');
       const negInfoOpen = document.getElementById('negInfoOpen');
+      const judgeModal = document.getElementById('judgeModal');
+      const judgeModalBackdrop = document.getElementById('judgeModalBackdrop');
+      const judgeModalClose = document.getElementById('judgeModalClose');
+      const judgeModalBody = document.getElementById('judgeModalBody');
 
       /** @type {Record<string, unknown> | null} */
       let lastWalletStatus = null;
@@ -1374,16 +1636,33 @@
         if (!walletModal || walletModal.hidden) document.body.style.overflow = '';
       }
 
+      function openJudgeModal() {
+        if (!judgeModal || !judgeModalBody || !latestJudgePayload) return;
+        judgeModal.hidden = false;
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeJudgeModal() {
+        if (!judgeModal) return;
+        judgeModal.hidden = true;
+        if ((!walletModal || walletModal.hidden) && (!negInfoModal || negInfoModal.hidden)) {
+          document.body.style.overflow = '';
+        }
+      }
+
       if (walletTopUpOpen) walletTopUpOpen.addEventListener('click', openWalletModal);
       if (walletModalClose) walletModalClose.addEventListener('click', closeWalletModal);
       if (walletModalBackdrop) walletModalBackdrop.addEventListener('click', closeWalletModal);
       if (negInfoOpen) negInfoOpen.addEventListener('click', openNegInfoModal);
       if (negInfoModalClose) negInfoModalClose.addEventListener('click', closeNegInfoModal);
       if (negInfoModalBackdrop) negInfoModalBackdrop.addEventListener('click', closeNegInfoModal);
+      if (judgeModalClose) judgeModalClose.addEventListener('click', closeJudgeModal);
+      if (judgeModalBackdrop) judgeModalBackdrop.addEventListener('click', closeJudgeModal);
       document.addEventListener('keydown', (e) => {
         if (e.key !== 'Escape') return;
         if (walletModal && !walletModal.hidden) closeWalletModal();
         else if (negInfoModal && !negInfoModal.hidden) closeNegInfoModal();
+        else if (judgeModal && !judgeModal.hidden) closeJudgeModal();
       });
 
       function teardownWalletForm() {
@@ -1450,6 +1729,11 @@
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (!hasCustomBuyerAgentName()) {
+          updateAgentNameRequirementUi();
+          if (agentNameInput) agentNameInput.focus();
+          return;
+        }
         const text = input.value.trim();
         if (!text) return;
         input.value = '';
@@ -1510,38 +1794,173 @@
             append('err', String(err.message || err));
           }
         } finally {
-          sendBtn.disabled = false;
-          input.focus();
+          updateAgentNameRequirementUi();
+          if (input && !input.disabled) input.focus();
           refreshWalletLine();
         }
       });
 
       const negOut = document.getElementById('negOut');
       const negRun = document.getElementById('negRun');
+      const negSavePrompt = document.getElementById('negSavePrompt');
       const negWalk = document.getElementById('negWalk');
       const negGoal = document.getElementById('negGoal');
+      const negEventSelect = document.getElementById('negEventSelect');
+      const negEventRefresh = document.getElementById('negEventRefresh');
+      const negEventState = document.getElementById('negEventState');
+      const negPromptState = document.getElementById('negPromptState');
       const negSpendAmount = document.getElementById('negSpendAmount');
       const negToolCount = document.getElementById('negToolCount');
+      const negJudgeStatus = document.getElementById('negJudgeStatus');
+      const negJudgeOpen = document.getElementById('negJudgeOpen');
       const panelChat = document.getElementById('panel-chat');
       const panelNeg = document.getElementById('panel-neg');
+      const userHistoryList = document.getElementById('userHistoryList');
+      const userHistoryEmpty = document.getElementById('userHistoryEmpty');
 
-      /** @type {HTMLElement | null} */
-      let negJudgePanelEl = null;
+      function loadSavedMandate() {
+        return (window.localStorage.getItem(NEG_MANDATE_STORAGE_KEY) || '').trim();
+      }
 
-      function removeNegJudgePanel() {
-        if (negJudgePanelEl) {
-          negJudgePanelEl.remove();
-          negJudgePanelEl = null;
+      /** @returns {Array<Record<string, unknown>>} */
+      function loadNegHistory() {
+        try {
+          const raw = window.localStorage.getItem(NEG_HISTORY_STORAGE_KEY);
+          if (!raw) return [];
+          const parsed = JSON.parse(raw);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch {
+          return [];
         }
       }
 
-      function showJudgePending() {
-        removeNegJudgePanel();
-        negJudgePanelEl = document.createElement('div');
-        negJudgePanelEl.className = 'neg-judge-panel pending';
-        negJudgePanelEl.textContent = 'Submitting to negotiation judge…';
-        negOut.appendChild(negJudgePanelEl);
-        scrollToBottomIfPinned(negOut);
+      /** @param {Array<Record<string, unknown>>} history */
+      function saveNegHistory(history) {
+        window.localStorage.setItem(NEG_HISTORY_STORAGE_KEY, JSON.stringify(history.slice(0, 60)));
+      }
+
+      function normalizeEventId(value) {
+        return String(value || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+      }
+
+      function loadSavedEventId() {
+        return normalizeEventId(window.localStorage.getItem(NEG_EVENT_STORAGE_KEY) || '');
+      }
+
+      function saveSelectedEventId(eventId) {
+        if (eventId) window.localStorage.setItem(NEG_EVENT_STORAGE_KEY, eventId);
+        else window.localStorage.removeItem(NEG_EVENT_STORAGE_KEY);
+      }
+
+      function getSelectedEventId() {
+        return normalizeEventId(negEventSelect && negEventSelect.value ? negEventSelect.value : '');
+      }
+
+      function setEventState(text, isError = false) {
+        if (!negEventState) return;
+        negEventState.textContent = text;
+        negEventState.classList.toggle('err', !!isError);
+      }
+
+      /**
+       * @param {Array<Record<string, unknown>>} events
+       * @param {string} preferredId
+       */
+      function renderNegEventOptions(events, preferredId) {
+        if (!negEventSelect) return '';
+        const rows = Array.isArray(events) ? events : [];
+        const normalizedRows = rows
+          .map((evt) => {
+            const id = normalizeEventId(evt && (evt.event_id || evt.eventId || evt.id));
+            if (!id) return null;
+            const name = String((evt && evt.name) || id).trim() || id;
+            return { id, name };
+          })
+          .filter(Boolean);
+
+        const seen = new Set();
+        const deduped = normalizedRows.filter((row) => {
+          if (seen.has(row.id)) return false;
+          seen.add(row.id);
+          return true;
+        });
+
+        const saved = normalizeEventId(preferredId || loadSavedEventId());
+        const selected =
+          (saved && deduped.find((row) => row.id === saved) && saved) ||
+          (deduped[0] && deduped[0].id) ||
+          '';
+
+        negEventSelect.innerHTML = '';
+        if (!deduped.length) {
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = 'No events found';
+          negEventSelect.appendChild(opt);
+          negEventSelect.value = '';
+          setEventState('No events available from judge service.', true);
+          updateNegPromptUi();
+          return '';
+        }
+
+        deduped.forEach((row) => {
+          const opt = document.createElement('option');
+          opt.value = row.id;
+          opt.textContent = row.name + ' (' + row.id + ')';
+          negEventSelect.appendChild(opt);
+        });
+        negEventSelect.value = selected;
+        saveSelectedEventId(selected);
+        setEventState('Selected event: ' + selected);
+        updateNegPromptUi();
+        return selected;
+      }
+
+      async function refreshNegotiationEvents() {
+        if (!negEventSelect) return;
+        negEventSelect.disabled = true;
+        if (negEventRefresh) negEventRefresh.disabled = true;
+        setEventState('Loading events…');
+        try {
+          const r = await fetch('/api/negotiation/events', { credentials: 'include' });
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(j.error || r.statusText || 'Request failed');
+          const selected = renderNegEventOptions(Array.isArray(j.events) ? j.events : [], loadSavedEventId());
+          if (selected) setEventState('Selected event: ' + selected);
+        } catch (err) {
+          if (negEventSelect) {
+            negEventSelect.innerHTML = '<option value="">Event fetch failed</option>';
+            negEventSelect.value = '';
+          }
+          setEventState('Event list unavailable: ' + String(err.message || err), true);
+          updateNegPromptUi();
+        } finally {
+          if (negEventSelect) negEventSelect.disabled = false;
+          if (negEventRefresh) negEventRefresh.disabled = false;
+        }
+      }
+
+      let savedMandate = loadSavedMandate();
+      /** @type {Array<Record<string, unknown>>} */
+      let userNegHistory = loadNegHistory();
+      /** @type {string|null} */
+      let selectedHistoryId = null;
+
+      /** @type {Record<string, unknown> | null} */
+      let latestJudgePayload = null;
+
+      function setJudgeStatus(text, opts = {}) {
+        if (negJudgeStatus) {
+          negJudgeStatus.textContent = text;
+          negJudgeStatus.classList.toggle('ready', !!opts.ready);
+          negJudgeStatus.classList.remove('status-running', 'status-scoring', 'status-error');
+          if (opts.state === 'running') negJudgeStatus.classList.add('status-running');
+          if (opts.state === 'scoring') negJudgeStatus.classList.add('status-scoring');
+          if (opts.state === 'error') negJudgeStatus.classList.add('status-error');
+        }
+        if (negJudgeOpen) {
+          negJudgeOpen.disabled = !opts.enableButton;
+        }
       }
 
       const JUDGE_SCORE_LABELS = {
@@ -1553,9 +1972,24 @@
         economic_efficiency: 'Economic efficiency',
         persistence_creativity: 'Persistence & creativity',
       };
+      const DEFAULT_JUDGE_SCORE_SCALES = {
+        price_outcome: 20,
+        decision_quality: 10,
+        information_acquisition: 10,
+        evidence_utilization: 10,
+        negotiation_quality: 10,
+        economic_efficiency: 10,
+        persistence_creativity: 10,
+      };
 
       function judgeScoreMax(j) {
-        return typeof j.score_max === 'number' ? j.score_max : 70;
+        return typeof j.score_max === 'number' ? j.score_max : 100;
+      }
+
+      /** @param {Record<string, unknown>} j */
+      function judgeScoreScaleMap(j) {
+        const raw = j && typeof j.score_scales === 'object' ? j.score_scales : null;
+        return raw ? { ...DEFAULT_JUDGE_SCORE_SCALES, ...raw } : DEFAULT_JUDGE_SCORE_SCALES;
       }
 
       /** @param {unknown} item */
@@ -1579,17 +2013,57 @@
       }
 
       /** @param {Record<string, unknown>} j */
-      function appendJudgeResult(j) {
-        removeNegJudgePanel();
-        negJudgePanelEl = document.createElement('div');
-        negJudgePanelEl.className = 'neg-judge-panel';
+      function judgeDiscretionary(j) {
+        const raw = j.discretionary_bonus;
+        if (!raw || typeof raw !== 'object') return null;
+        const flair =
+          typeof raw.flair_style_approach === 'number' && Number.isFinite(raw.flair_style_approach)
+            ? Math.max(0, Math.min(5, Math.round(raw.flair_style_approach)))
+            : null;
+        const floor =
+          typeof raw.price_floor_alignment === 'number' && Number.isFinite(raw.price_floor_alignment)
+            ? Math.max(0, Math.min(15, Math.round(raw.price_floor_alignment)))
+            : null;
+        const total =
+          typeof raw.total === 'number' && Number.isFinite(raw.total)
+            ? Math.max(0, Math.min(20, Math.round(raw.total)))
+            : flair != null || floor != null
+              ? Math.max(0, Math.min(20, (flair || 0) + (floor || 0)))
+              : null;
+        const why =
+          typeof raw.justification === 'string' && raw.justification.trim()
+            ? raw.justification.trim()
+            : '';
+        if (total == null && !why) return null;
+        return { flair, floor, total, why };
+      }
 
+      /** @param {Record<string, unknown>} j */
+      function judgeDiscretionarySummary(j) {
+        const d = judgeDiscretionary(j);
+        if (!d) return '';
+        const bits = [];
+        if (typeof d.total === 'number') bits.push('Discretionary bonus: ' + d.total + '/20');
+        if (typeof d.flair === 'number' || typeof d.floor === 'number') {
+          const sub = [];
+          if (typeof d.flair === 'number') sub.push('flair/style ' + d.flair + '/5');
+          if (typeof d.floor === 'number') sub.push('price-floor alignment ' + d.floor + '/15');
+          if (sub.length) bits.push('(' + sub.join(' + ') + ')');
+        }
+        if (d.why) bits.push('Why: ' + d.why);
+        return bits.join(' ');
+      }
+
+      /** @param {Record<string, unknown>} j */
+      function renderJudgeModalBody(j) {
+        if (!judgeModalBody) return;
+        judgeModalBody.className = 'neg-judge-panel';
+        judgeModalBody.innerHTML = '';
         const head = document.createElement('div');
         head.className = 'neg-judge-head';
         const title = document.createElement('h3');
         title.textContent = 'Judge score';
         head.appendChild(title);
-
         if (typeof j.overall_score === 'number') {
           const overall = document.createElement('span');
           overall.innerHTML = '<strong>' + j.overall_score + '</strong> / ' + judgeScoreMax(j);
@@ -1601,8 +2075,16 @@
           badge.textContent = String(j.rating);
           head.appendChild(badge);
         }
-        negJudgePanelEl.appendChild(head);
-
+        judgeModalBody.appendChild(head);
+        const discretionSummary = judgeDiscretionarySummary(j);
+        if (discretionSummary) {
+          const dp = document.createElement('p');
+          dp.className = 'neg-meta';
+          dp.style.marginTop = '0.35rem';
+          dp.style.marginBottom = '0.45rem';
+          dp.innerHTML = '<strong>' + escapeHtml(discretionSummary) + '</strong>';
+          judgeModalBody.appendChild(dp);
+        }
         if (j.metrics && typeof j.metrics === 'object') {
           const m = j.metrics;
           const meta = document.createElement('p');
@@ -1613,31 +2095,40 @@
           if (typeof m.leverage_source_count === 'number') bits.push('Leverage sources: ' + m.leverage_source_count);
           if (bits.length) {
             meta.textContent = bits.join(' · ');
-            negJudgePanelEl.appendChild(meta);
+            judgeModalBody.appendChild(meta);
           }
         }
-
         if (j.scores && typeof j.scores === 'object') {
           const grid = document.createElement('div');
           grid.className = 'neg-judge-scores';
+          const scoreScales = judgeScoreScaleMap(j);
           for (const [key, label] of Object.entries(JUDGE_SCORE_LABELS)) {
             if (!(key in j.scores)) continue;
             const row = document.createElement('div');
             row.className = 'neg-judge-score-row';
-            row.innerHTML = '<span>' + escapeHtml(label) + '</span><strong>' + escapeHtml(String(j.scores[key])) + '/10</strong>';
+            const scale = typeof scoreScales[key] === 'number' ? scoreScales[key] : 10;
+            row.innerHTML =
+              '<span>' + escapeHtml(label) + '</span><strong>' + escapeHtml(String(j.scores[key])) + '/' + escapeHtml(String(scale)) + '</strong>';
             grid.appendChild(row);
           }
-          negJudgePanelEl.appendChild(grid);
+          const d = judgeDiscretionary(j);
+          if (d && typeof d.total === 'number') {
+            const row = document.createElement('div');
+            row.className = 'neg-judge-score-row';
+            row.innerHTML = '<span>Judge discretion</span><strong>' + escapeHtml(String(d.total)) + '/20</strong>';
+            grid.appendChild(row);
+          }
+          judgeModalBody.appendChild(grid);
         }
-
         const fb = j.feedback && typeof j.feedback === 'object' ? j.feedback : null;
         if (fb) {
           const lists = document.createElement('div');
           lists.className = 'neg-judge-lists';
-          if (fb.summary) {
+          const summary = [discretionSummary, fb.summary ? String(fb.summary).trim() : ''].filter(Boolean).join(' ');
+          if (summary) {
             const p = document.createElement('p');
             p.style.margin = '0 0 0.5rem';
-            p.textContent = String(fb.summary);
+            p.textContent = summary;
             lists.appendChild(p);
           }
           function addList(title, items) {
@@ -1668,27 +2159,37 @@
             lists.appendChild(ul);
           }
           addList('Coaching tips', fb.coaching_tips);
-          negJudgePanelEl.appendChild(lists);
+          judgeModalBody.appendChild(lists);
         }
-
         const lbLink = document.createElement('p');
         lbLink.className = 'neg-meta';
         lbLink.style.marginTop = '0.65rem';
-        lbLink.innerHTML =
-          '<a href="/leaderboard.html" style="color:var(--accent);font-weight:600">View leaderboard</a>';
-        negJudgePanelEl.appendChild(lbLink);
+        lbLink.innerHTML = '<a href="/leaderboard.html" style="color:var(--accent);font-weight:600">View leaderboard</a>';
+        judgeModalBody.appendChild(lbLink);
+      }
 
-        negOut.appendChild(negJudgePanelEl);
-        scrollToBottomIfPinned(negOut);
+      function showJudgePending() {
+        latestJudgePayload = null;
+        setJudgeStatus('Scoring…', { enableButton: false, ready: false, state: 'scoring' });
+      }
+
+      function showJudgeResult(j) {
+        latestJudgePayload = { kind: 'result', data: j };
+        renderJudgeModalBody(j);
+        const overall =
+          typeof j.overall_score === 'number' ? String(j.overall_score) + '/' + String(judgeScoreMax(j)) : '';
+        const d = judgeDiscretionary(j);
+        const dText = d && typeof d.total === 'number' ? ' · discretion ' + d.total + '/20' : '';
+        setJudgeStatus(overall ? 'Scored ✓ (' + overall + dText + ')' : 'Scored ✓', { enableButton: true, ready: true });
       }
 
       function showJudgeError(msg) {
-        removeNegJudgePanel();
-        negJudgePanelEl = document.createElement('div');
-        negJudgePanelEl.className = 'neg-judge-panel err';
-        negJudgePanelEl.textContent = 'Judge: ' + msg;
-        negOut.appendChild(negJudgePanelEl);
-        scrollToBottomIfPinned(negOut);
+        latestJudgePayload = { kind: 'error', message: msg };
+        if (judgeModalBody) {
+          judgeModalBody.className = 'neg-judge-panel err';
+          judgeModalBody.textContent = 'Judge: ' + msg;
+        }
+        setJudgeStatus('Judge error', { enableButton: true, ready: false, state: 'error' });
       }
 
       /** @type {boolean | null} */
@@ -1712,18 +2213,18 @@
        * @param {number} streamGen
        */
       function showJudgeSkipped() {
-        removeNegJudgePanel();
-        negJudgePanelEl = document.createElement('div');
-        negJudgePanelEl.className = 'neg-judge-panel err';
-        negJudgePanelEl.innerHTML =
-          '<strong>Judge scoring not configured.</strong> Set <code>JUDGE_SERVICE_URL</code> in repo root <code>.env</code> ' +
-          '(run <code>npm run buyer:sync-env</code> to pull from AWS, or <code>npm run judge-service:dev</code> for local). ' +
-          'Restart the buyer agent after updating env.';
-        negOut.appendChild(negJudgePanelEl);
-        scrollToBottomIfPinned(negOut);
+        latestJudgePayload = { kind: 'skipped' };
+        if (judgeModalBody) {
+          judgeModalBody.className = 'neg-judge-panel err';
+          judgeModalBody.innerHTML =
+            '<strong>Judge scoring not configured.</strong> Set <code>JUDGE_SERVICE_URL</code> in repo root <code>.env</code> ' +
+            '(run <code>npm run buyer:sync-env</code> to pull from AWS, or <code>npm run judge-service:dev</code> for local). ' +
+            'Restart the buyer agent after updating env.';
+        }
+        setJudgeStatus('Not configured', { enableButton: true, ready: false, state: 'error' });
       }
 
-      async function requestJudgeEvaluation(negResult, mandate, streamGen) {
+      async function requestJudgeEvaluation(negResult, mandate, streamGen, historyId, eventId) {
         if (!(await isJudgeConfigured())) {
           if (streamGen === negStreamGen) showJudgeSkipped();
           return;
@@ -1737,6 +2238,7 @@
             body: JSON.stringify({
               ...negResult,
               buyerGoal: mandate,
+              event_id: eventId || getSelectedEventId() || 'default',
             }),
           });
           if (streamGen !== negStreamGen) return;
@@ -1745,9 +2247,15 @@
             showJudgeError(j.error || r.statusText || 'Request failed');
             return;
           }
-          appendJudgeResult(j);
+          showJudgeResult(j);
+          if (historyId) {
+            const existing = userNegHistory.find((r) => String(r.id) === String(historyId));
+            if (existing) {
+              upsertUserRun({ ...existing, judge: j }, false);
+            }
+          }
           const entryId = typeof j.entryId === 'string' ? j.entryId : '';
-          const link = negJudgePanelEl && negJudgePanelEl.querySelector('a[href="/leaderboard.html"]');
+          const link = judgeModalBody && judgeModalBody.querySelector('a[href="/leaderboard.html"]');
           if (link && entryId) {
             link.href = '/leaderboard.html?id=' + encodeURIComponent(entryId);
             link.textContent = 'View on leaderboard';
@@ -1777,6 +2285,47 @@
         return j.outcome || 'unknown';
       }
 
+      /**
+       * @param {Record<string, unknown>[]} transcript
+       * @param {'buyer' | 'seller'} speaker
+       */
+      function latestMessageBySpeaker(transcript, speaker) {
+        if (!Array.isArray(transcript)) return null;
+        for (let i = transcript.length - 1; i >= 0; i--) {
+          const row = transcript[i];
+          if (row && row.speaker === speaker && typeof row.text === 'string' && row.text.trim()) return row.text.trim();
+        }
+        return null;
+      }
+
+      /** @param {string} text */
+      function inferAgreementFigure(text) {
+        const s = String(text || '');
+        if (!s) return null;
+        const creditMatch =
+          s.match(/\$[\d,]+(?:\.\d{2})?\s+credit(?:\s+at\s+closing)?/i) ||
+          s.match(/credit(?:\s+at\s+closing)?\s+(?:of\s+)?\$[\d,]+(?:\.\d{2})?/i);
+        if (creditMatch) return creditMatch[0];
+        const money = s.match(/\$[\d,]+(?:\.\d{2})?/);
+        if (money) return money[0];
+        return null;
+      }
+
+      /** @param {Record<string, unknown>} j */
+      function inferAgreementSummary(j) {
+        if (String(j.outcome || '').toLowerCase() !== 'agreed') return '';
+        const transcript = Array.isArray(j.transcript) ? j.transcript : [];
+        const sellerText = latestMessageBySpeaker(transcript, 'seller');
+        const buyerText = latestMessageBySpeaker(transcript, 'buyer');
+        const sellerFigure = inferAgreementFigure(sellerText || '');
+        const buyerFigure = inferAgreementFigure(buyerText || '');
+        const figure = sellerFigure || buyerFigure;
+        if (!figure) return '';
+        const lower = String(figure).toLowerCase();
+        if (lower.includes('credit')) return `Agreed term: ${figure}`;
+        return `Agreed figure: ${figure}`;
+      }
+
       /** @param {Record<string, unknown>} j */
       function appendOutcome(j) {
         const head = document.createElement('p');
@@ -1787,6 +2336,8 @@
         head.innerHTML =
           '<strong>Outcome:</strong> ' +
           escapeHtml(formatNegOutcome(j)) +
+          ' · <strong>Event:</strong> ' +
+          escapeHtml(j.event_id || j.eventId || 'default') +
           ' · <strong>Buyer turns:</strong> ' +
           (j.roundsCompleted ?? '?') +
           ' · <strong>Who opened:</strong> ' +
@@ -1801,46 +2352,191 @@
             ' · <strong>Tools:</strong> ' +
             count;
         }
+        const agreementSummary = inferAgreementSummary(j);
+        if (agreementSummary) {
+          head.innerHTML += ' · <strong>' + escapeHtml(agreementSummary) + '</strong>';
+        }
         NegotiationChat.ensureThread(negOut).appendChild(head);
         scrollToBottomIfPinned(negOut);
       }
 
-      document.querySelectorAll('.tab[data-tab]').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const tab = btn.getAttribute('data-tab');
-          document.querySelectorAll('.tab[data-tab]').forEach((b) => {
-            const on = b.getAttribute('data-tab') === tab;
-            b.classList.toggle('active', on);
-            b.setAttribute('aria-selected', on ? 'true' : 'false');
-          });
-          panelChat.classList.toggle('active', tab === 'chat');
-          panelNeg.classList.toggle('active', tab === 'neg');
+      function updateNegPromptUi() {
+        const current = (negGoal.value || '').trim();
+        const hasName = hasCustomBuyerAgentName();
+        const hasSaved = !!savedMandate;
+        const matchesSaved = hasSaved && current === savedMandate;
+        const hasEvent = !!getSelectedEventId();
+        if (negRun) negRun.disabled = !hasName || !matchesSaved || !hasEvent;
+        if (negPromptState) {
+          if (!hasName) {
+            negPromptState.textContent = 'Set Agent name first. Running negotiations requires a named agent.';
+          } else if (!hasEvent) {
+            negPromptState.textContent = 'Select an event first. Every run is scored into one event leaderboard.';
+          } else if (!hasSaved) {
+            negPromptState.textContent = 'Save your mandate prompt first. Run is enabled only when the saved prompt matches the text box.';
+          } else if (matchesSaved) {
+            negPromptState.textContent = 'Prompt saved. Ready to run.';
+          } else {
+            negPromptState.textContent = 'Prompt edited after save. Click Save prompt again to enable Run.';
+          }
+        }
+      }
+
+      function saveNegPrompt() {
+        const current = (negGoal.value || '').trim();
+        if (!current) {
+          if (negPromptState) negPromptState.textContent = 'Enter a mandate prompt before saving.';
+          updateNegPromptUi();
+          return;
+        }
+        savedMandate = current;
+        window.localStorage.setItem(NEG_MANDATE_STORAGE_KEY, savedMandate);
+        if (negPromptState) negPromptState.textContent = 'Prompt saved locally for this browser user.';
+        updateNegPromptUi();
+      }
+
+      /**
+       * @param {Record<string, unknown>} run
+       * @param {boolean} [select]
+       */
+      function upsertUserRun(run, select = true) {
+        const id = typeof run.id === 'string' ? run.id : randomId('run');
+        const normalized = { ...run, id, savedAt: run.savedAt || new Date().toISOString() };
+        userNegHistory = [normalized, ...userNegHistory.filter((r) => r && r.id !== id)].slice(0, 60);
+        saveNegHistory(userNegHistory);
+        if (select) selectedHistoryId = id;
+        renderUserHistoryList();
+        return id;
+      }
+
+      function renderUserHistoryList() {
+        if (!userHistoryList || !userHistoryEmpty) return;
+        userHistoryList.innerHTML = '';
+        userHistoryEmpty.hidden = userNegHistory.length > 0;
+        userNegHistory.forEach((entry) => {
+          const id = String(entry.id || '');
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'side-history-item' + (selectedHistoryId === id ? ' active' : '');
+          const mandate = String(entry.buyerMandate || '').trim();
+          const title = mandate
+            ? mandate.length > 54
+              ? mandate.slice(0, 54) + '…'
+              : mandate
+            : '(untitled run)';
+          const outcome = entry.outcome ? String(entry.outcome) : 'unknown';
+          btn.innerHTML =
+            '<span class="title">' +
+            escapeHtml(title) +
+            '</span>' +
+            '<span class="meta">' +
+            escapeHtml(formatShortTime(String(entry.savedAt || ''))) +
+            ' · ' +
+            escapeHtml(outcome) +
+            '</span>';
+          btn.addEventListener('click', () => showHistoryEntry(id));
+          userHistoryList.appendChild(btn);
         });
+      }
+
+      function showHistoryEntry(id) {
+        const entry = userNegHistory.find((r) => String(r.id) === String(id));
+        if (!entry) return;
+        selectedHistoryId = String(id);
+        renderUserHistoryList();
+        setActiveTab('neg');
+        if (typeof entry.buyerMandate === 'string' && entry.buyerMandate.trim()) {
+          negGoal.value = entry.buyerMandate;
+        }
+        updateNegPromptUi();
+        negOut.innerHTML = '';
+        updateNegSpendBar(entry.negotiationSpend || { spentCents: 0, toolCallCount: 0 });
+        NegotiationChat.renderTranscript(
+          negOut,
+          Array.isArray(entry.transcript) ? entry.transcript : [],
+          { buyerLabel: entry.buyerName || buyerAgentName(), sellerLabel: 'Seller agent' }
+        );
+        appendOutcome(entry);
+        if (entry.judge && typeof entry.judge === 'object') {
+          showJudgeResult(entry.judge);
+        } else {
+          latestJudgePayload = null;
+          setJudgeStatus('No judge result', { enableButton: false, ready: false, state: 'error' });
+        }
+      }
+
+      function setActiveTab(tab) {
+        const next = tab === 'neg' ? tab : 'chat';
+        document.querySelectorAll('.tab[data-tab]').forEach((b) => {
+          const on = b.getAttribute('data-tab') === next;
+          b.classList.toggle('active', on);
+          b.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        panelChat.classList.toggle('active', next === 'chat');
+        panelNeg.classList.toggle('active', next === 'neg');
+      }
+
+      document.querySelectorAll('.tab[data-tab]').forEach((btn) => {
+        btn.addEventListener('click', () => setActiveTab(btn.getAttribute('data-tab')));
       });
+
+      if (negSavePrompt) negSavePrompt.addEventListener('click', saveNegPrompt);
+      if (negJudgeOpen) negJudgeOpen.addEventListener('click', openJudgeModal);
+      if (negEventSelect) {
+        negEventSelect.addEventListener('change', () => {
+          const selected = getSelectedEventId();
+          saveSelectedEventId(selected);
+          setEventState(selected ? 'Selected event: ' + selected : 'Pick an event before running negotiation.', !selected);
+          updateNegPromptUi();
+        });
+      }
+      if (negEventRefresh) negEventRefresh.addEventListener('click', refreshNegotiationEvents);
+      if (negGoal) {
+        negGoal.addEventListener('input', () => updateNegPromptUi());
+        if (savedMandate) negGoal.value = savedMandate;
+      }
+      renderUserHistoryList();
+      refreshNegotiationEvents();
+      updateNegPromptUi();
+      setJudgeStatus('Waiting for run', { enableButton: false, ready: false });
 
       if (negRun) negRun.addEventListener('click', async () => {
         const buyerGoal = negGoal.value.trim();
+        const selectedEventId = getSelectedEventId();
+        if (!hasCustomBuyerAgentName()) {
+          updateAgentNameRequirementUi();
+          updateNegPromptUi();
+          if (agentNameInput) agentNameInput.focus();
+          return;
+        }
+        if (!selectedEventId) {
+          setEventState('Select an event before running.', true);
+          updateNegPromptUi();
+          if (negEventSelect) negEventSelect.focus();
+          return;
+        }
+        if (!savedMandate || buyerGoal !== savedMandate) {
+          updateNegPromptUi();
+          return;
+        }
         if (!buyerGoal) {
           negOut.textContent = 'Enter a buyer mandate first.';
-          panelNeg.classList.add('active');
-          panelChat.classList.remove('active');
-          document.querySelectorAll('.tab[data-tab]').forEach((b) => {
-            const on = b.getAttribute('data-tab') === 'neg';
-            b.classList.toggle('active', on);
-            b.setAttribute('aria-selected', on ? 'true' : 'false');
-          });
+          setActiveTab('neg');
           return;
         }
         negRun.disabled = true;
         if (negWalk) negWalk.disabled = false;
         negOut.innerHTML = '';
-        removeNegJudgePanel();
+        latestJudgePayload = null;
+        setJudgeStatus('Running…', { enableButton: false, ready: false, state: 'running' });
         updateNegSpendBar({ spentCents: 0, toolCallCount: 0 });
         /** @type {{ speaker: string, text: string, round?: number, buyerActivity?: unknown[] }[]} */
         const negLiveTranscript = [];
         const myNegGen = ++negStreamGen;
         const negAbort = new AbortController();
         let walkHandled = false;
+        const runHistoryId = randomId('run');
+        const runBuyerName = buyerAgentName();
 
         function finishWalk() {
           if (walkHandled || myNegGen !== negStreamGen) return;
@@ -1855,6 +2551,11 @@
           scrollToBottomIfPinned(negOut);
           refreshNegSpendFromServer().then((spend) => {
             const outcome = {
+              id: runHistoryId,
+              savedAt: new Date().toISOString(),
+              eventId: selectedEventId,
+              buyerMandate: buyerGoal,
+              buyerName: runBuyerName,
               outcome: 'walked',
               endedBy: 'user',
               roundsCompleted: buyerTurns,
@@ -1862,8 +2563,9 @@
               negotiationSpend: spend || undefined,
               transcript: negLiveTranscript.slice(),
             };
+            upsertUserRun(outcome, true);
             appendOutcome(outcome);
-            requestJudgeEvaluation(outcome, buyerGoal, myNegGen);
+            requestJudgeEvaluation(outcome, buyerGoal, myNegGen, runHistoryId, selectedEventId);
           });
         }
 
@@ -1960,6 +2662,8 @@
             round: round ?? undefined,
             buyerActivity: evt.buyerActivity,
             skipActivity: !!skipDupActivity,
+            buyerLabel: runBuyerName,
+            sellerLabel: 'Seller agent',
           });
           scrollToBottomIfPinned(negOut);
           await typewriterReveal(built.bodyEl, evt.text || '', negOut, () => myNegGen !== negStreamGen);
@@ -1984,6 +2688,7 @@
               text: evt.text || '',
               round: evt.round,
               buyerActivity: evt.buyerActivity,
+              speakerLabel: evt.speaker === 'buyer' ? runBuyerName : 'Seller agent',
             });
             await appendNegMessage(evt);
             if (evt.speaker === 'buyer') streamedBuyerSteps = false;
@@ -1993,14 +2698,31 @@
             if (spend) updateNegSpendBar(spend);
             else spend = await refreshNegSpendFromServer();
             appendOutcome(evt);
+            const runEntry = {
+              id: runHistoryId,
+              savedAt: new Date().toISOString(),
+              eventId: selectedEventId,
+              buyerMandate: buyerGoal,
+              buyerName: runBuyerName,
+              ...evt,
+              transcript:
+                Array.isArray(evt.transcript) && evt.transcript.length
+                  ? evt.transcript
+                  : negLiveTranscript.slice(),
+              negotiationSpend: spend || evt.negotiationSpend,
+            };
+            upsertUserRun(runEntry, true);
             requestJudgeEvaluation(
               {
                 ...evt,
+                buyerName: runBuyerName,
                 transcript: Array.isArray(evt.transcript) && evt.transcript.length ? evt.transcript : negLiveTranscript.slice(),
                 negotiationSpend: spend || evt.negotiationSpend,
               },
               buyerGoal,
-              myNegGen
+              myNegGen,
+              runHistoryId,
+              selectedEventId
             );
           } else if (evt.type === 'error') {
             clearTyping();
@@ -2020,7 +2742,10 @@
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             signal: negAbort.signal,
-            body: JSON.stringify({ buyerGoal, maxRounds: NEG_MAX_ROUNDS }),
+            body: JSON.stringify({
+              buyerGoal,
+              maxRounds: NEG_MAX_ROUNDS,
+            }),
           });
 
           if (!r.ok) {

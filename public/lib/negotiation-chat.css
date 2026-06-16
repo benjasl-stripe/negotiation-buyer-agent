@@ -1,9 +1,5 @@
 /* Chat-style negotiation thread — buyer left, seller right */
 
-main:has(#panel-neg.active) {
-  max-width: 52rem;
-}
-
 .neg-thread-container {
   min-height: 14rem;
   max-height: 58vh;
