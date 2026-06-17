@@ -91,6 +91,7 @@ Use this when you want to validate data paths before writing tool logic.
 ```bash
 # Example: free or paid route depending on backend config
 curl -i "https://jf04vpwzxk.execute-api.us-west-2.amazonaws.com/api/property/schools"
+```
 
 If the route is paid, you will see `402 Payment Required`. That is expected in MPP mode until a valid payment credential is provided.
 
