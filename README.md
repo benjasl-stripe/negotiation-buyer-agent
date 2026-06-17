@@ -75,9 +75,10 @@ Your agent starts with no automatic property tools wired in. That is intentional
 You choose what intelligence the buyer can access, and how that intelligence is retrieved.
 
 Discover available tools:
-  ```bash
-   npm run tools:discover
-  ```
+
+```bash
+npm run tools:discover
+```
 
 At this stage you have two valid playstyles:
 
@@ -134,8 +135,6 @@ Your implementation target is the core loop:
 3. mint SPT from session wallet
 4. retry with payment credential
 5. return success data + receipt
-
-```
 
 ### Early-win checklist
 
