@@ -1,5 +1,18 @@
 {
   "version": 1,
   "comment": "Intentionally empty for hackathon start. Add only the tools you choose to build with.",
-  "tools": []
+  "tools": [
+
+    {
+      "name": "property_schools",
+      "description": "Use when school assignment or rezoning affects buyer value/risk.",
+      "parameters": { "type": "object", "properties": {} },
+      "http": {
+        "method": "GET",
+        "url": "https://jf04vpwzxk.execute-api.us-west-2.amazonaws.com/api/property/schools",
+        "headers": {}
+      }
+    }
+
+  ]
 }

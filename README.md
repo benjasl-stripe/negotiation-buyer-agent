@@ -10,8 +10,6 @@ The property is fixed.
 The seller is live.  
 The leaderboard is public.
 
-Your edge is not "call every tool." Your edge is judgment: buy the right evidence, at the right time, and turn it into leverage.
-
 You start with a local buyer app. You shape the agent, select tools, run negotiations, review judge feedback, and iterate until your agent can close strong deals with efficient spend.
 
 ## Your first 30 minutes
@@ -39,87 +37,95 @@ npm run buyer:check
 npm run dev
 ```
 
-Open **http://localhost:3000** — **Practice chat** or **Run vs seller**.
+Open **[http://localhost:3000](http://localhost:3000)** — **Practice chat** or **Run vs seller**.
 
 ## Chapter 1: First negotiation run
 
 1. In the UI, set your **Agent name** and choose your **Competing event**.
 2. In **Practice chat**:
-   - chat with **Buyer agent** once,
-   - switch to **Seller agent** once.
+  - chat with **Buyer agent**,
+  - switch to **Seller agent**.
 3. Go to **Run vs seller**:
-   - write a short buyer mandate,
-   - click **Save prompt**,
-   - click **Run negotiation**.
+  - write a short buyer mandate,
+  - click **Save prompt**,
+  - click **Run negotiation**.
 4. When run ends, open **View judge** and note:
-   - overall score,
-   - agreed price,
-   - tool calls + spend.
-5. Make one improvement (tool description or prompt), then run again.
-
-## Tool discovery (the ecosystem piece)
-
-Short answer: **yes** — there are common patterns.
-
-- **MCP (Model Context Protocol)**: emerging standard for agent tool discovery and invocation.  
-  Agents can list available tools dynamically from an MCP server.
-- **OpenAPI**: standard API description for HTTP services.  
-  Great for docs/client generation, but agents usually still need a tool wrapper.
-- **Manifest schemas** (like this repo): practical, explicit function/tool list for one app.
-
-### What this hackathon uses
-
-In this repo, attendees discover/use tools via:
-
-- `data/tools.manifest.json` (source of truth for enabled tools)
-- `data/tools.catalog.json` (discoverable catalog; not auto-enabled)
-- `npm run tools:list` (quick visibility)
-- `npm run tools:discover` (browse catalog options)
-- `POST /api/chat/reload-manifest` (refresh after edits)
-- `GET /api/chat/meta` (runtime view of loaded tool names)
-
-So while MCP is the bigger ecosystem direction, your hands-on workflow here is manifest-driven by design (easy to edit, easy to reason about, fast to iterate).
+  - overall score,
+  - agreed price,
+  - tool calls + spend.
+5. Make one improvement. then run again.
 
 ## Chapter 2: Build your toolbelt
 
-Your agent starts with no automatic property tools wired in.
+Your agent starts with no automatic property tools wired in. That is intentional.
 
-That is intentional.
+You choose what intelligence the buyer can access, and how that intelligence is retrieved.
 
-You decide what intelligence your agent is allowed to buy.
+At this stage you have two valid playstyles:
 
-Your goal is to turn a basic negotiator into a sharp, evidence-driven closer.
+1. **Manual investigator (fastest start):** call property endpoints yourself with `curl`, then feed findings to your buyer strategy.
+2. **Agent engineer (best scale):** wire tools into the manifest so the agent fetches data automatically during negotiation.
 
-### Your quest
+### Option A: Manual investigator (curl)
 
-1. Add tools in `data/tools.manifest.json`
-2. Point each one at the property-service endpoint
-3. Mark paid tools with `"mpp": true` (leave free tools without `mpp`)
-4. Teach your agent when to use each tool (great `description` text helps)
-5. Win on outcome **and** ROI
-
-Discover available starter tools with:
+Use this when you want to validate data paths before writing tool logic.
 
 ```bash
-npm run tools:discover
+# Example: free or paid route depending on backend config
+curl -i "https://<PROPERTY_API_BASE>/api/property/schools"
+
+# Example: another dossier
+curl -i "https://<PROPERTY_API_BASE>/api/property/inspection"
 ```
 
+If the route is paid, you will see `402 Payment Required`. That is expected in MPP mode.
+
+### Option B: Agent engineer (manifest + runner)
+
+Use this when you want your buyer agent to fetch evidence by itself.
+
+1. Discover available tools:
+  ```bash
+   npm run tools:discover
+  ```
+2. Add selected tools to `data/tools.manifest.json`.
+3. Point each tool URL to your deployed property-service endpoint.
+4. Write strong `description` triggers so the model knows when to call each tool.
+
+Example manifest entry:
+
+```json
+{
+  "name": "property_inspection_report",
+  "description": "Retrieve inspection findings and repair estimates. Use when condition, repairs, credits, or immediate safety issues are discussed.",
+  "parameters": {
+    "type": "object",
+    "properties": {}
+  },
+  "http": {
+    "method": "GET",
+    "url": "<PROPERTY_API_BASE>/api/property/inspection",
+    "headers": {}
+  },
+  "mpp": true
+}
+```
+
+### MPP coding exercise (minimal, real flow)
+
+All tool calls run through:
+
+- `lib/workshop-tool-runner.js`
+
+Your implementation target is the core loop:
+
+1. call paid route
+2. receive `402 Payment Required`
+3. mint SPT from session wallet
+4. retry with payment credential
+5. return success data + receipt
+
 Then choose tools from `data/tools.catalog.json` and manually create manifest entries in `data/tools.manifest.json`.
-
-By default, `property_schools` is the recommended **free starter tool** (no MPP fields).
-
-### Endpoint map (replace `<PROPERTY_API_BASE>`)
-
-- `.../api/property/disclosure`
-- `.../api/property/hoa`
-- `.../api/property/title-preliminary`
-- `.../api/property/inspection`
-- `.../api/property/tax-history`
-- `.../api/property/flood-hazard`
-- `.../api/property/comparable-sales`
-- `.../api/property/schools`
-- `.../api/property/utilities-energy`
-- `.../api/property/permits-renovations`
 
 ### Copy/paste starter tool
 
@@ -157,7 +163,11 @@ By default, `property_schools` is the recommended **free starter tool** (no MPP 
 
 ## Chapter 3: Supercharge your agent
 
-Give your agent the evidence it needs to make informed decisions and sharper negotiations.
+Whether you stay manual (`curl`) or integrate tools into the agent, the goal is the same: turn evidence into better outcomes.
+
+If you stay manual, bring only the strongest facts into your prompt updates.
+
+If you integrate tools, make your tool descriptions and buyer prompt specific enough that the model calls tools at the right moment.
 
 ### Evidence playbook
 
@@ -178,18 +188,20 @@ Give your agent the evidence it needs to make informed decisions and sharper neg
 
 1. Run one negotiation.
 2. Inspect tool timeline + spend + final transcript.
-3. Tighten tool descriptions and buyer prompt.
+3. Tighten tool descriptions and buyer prompt (or improve your manual evidence notes).
 4. Re-run and compare score, agreed price, and tool cost.
 
 ## What runs where
 
-| Component | Where |
-|-----------|--------|
-| This repo (buyer + UI) | Local `:3000` |
-| Seller agent | AWS — `SELLER_SERVICE_URL` |
-| Property dossier tools | AWS — URLs in `data/tools.manifest.json` |
-| Negotiation judge | AWS — `JUDGE_SERVICE_URL` |
-| OpenAI | AWS proxy — `LAMBDA_ENDPOINT` + `WORKSHOP_SECRET` |
+
+| Component              | Where                                             |
+| ---------------------- | ------------------------------------------------- |
+| This repo (buyer + UI) | Local `:3000`                                     |
+| Seller agent           | AWS — `SELLER_SERVICE_URL`                        |
+| Property dossier tools | AWS — URLs in `data/tools.manifest.json`          |
+| Negotiation judge      | AWS — `JUDGE_SERVICE_URL`                         |
+| OpenAI                 | AWS proxy — `LAMBDA_ENDPOINT` + `WORKSHOP_SECRET` |
+
 
 Platform services are maintained in the separate **negotiation-platform-services** repo (facilitator only).
 
@@ -201,10 +213,13 @@ Platform services are maintained in the separate **negotiation-platform-services
 
 ## Scripts
 
-| Command | Action |
-|---------|--------|
-| `npm run dev` | Start with hot reload |
-| `npm run buyer:check` | Validate `.env` + manifest |
-| `npm run buyer:sync-env` | Pull deployed service URLs from AWS (optional) |
-| `npm run tools:list` | List manifest tools |
+
+| Command                  | Action                                            |
+| ------------------------ | ------------------------------------------------- |
+| `npm run dev`            | Start with hot reload                             |
+| `npm run buyer:check`    | Validate `.env` + manifest                        |
+| `npm run buyer:sync-env` | Pull deployed service URLs from AWS (optional)    |
+| `npm run tools:list`     | List manifest tools                               |
 | `npm run tools:discover` | List discoverable catalog tools (not enabled yet) |
+
+
