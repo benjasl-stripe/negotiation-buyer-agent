@@ -99,9 +99,9 @@ If the route is paid, you will see `402 Payment Required`. That is expected in M
 
 Use this when you want your buyer agent to fetch evidence by itself.
 
-2. Add selected tools to `data/tools.manifest.json`.
-3. Point each tool URL to your deployed property-service endpoint.
-4. Write strong `description` triggers so the model knows when to call each tool.
+1. Add selected tools to `data/tools.manifest.json`.
+2. Point each tool URL to a property-service endpoint.
+3. Write strong `description` triggers so the model knows when to call each tool.
 
 Example manifest entry:
 
@@ -182,19 +182,6 @@ If you integrate tools, make your tool descriptions and buyer prompt specific en
 3. Tighten tool descriptions and buyer prompt (or improve your manual evidence notes).
 4. Re-run and compare score, agreed price, and tool cost.
 
-## What runs where
-
-
-| Component              | Where                                             |
-| ---------------------- | ------------------------------------------------- |
-| This repo (buyer + UI) | Local `:3000`                                     |
-| Seller agent           | AWS — `SELLER_SERVICE_URL`                        |
-| Property dossier tools | AWS — URLs in `data/tools.manifest.json`          |
-| Negotiation judge      | AWS — `JUDGE_SERVICE_URL`                         |
-| OpenAI                 | AWS proxy — `LAMBDA_ENDPOINT` + `WORKSHOP_SECRET` |
-
-
-Platform services are maintained in the separate **negotiation-platform-services** repo (facilitator only).
 
 ## Customization
 
