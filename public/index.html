@@ -895,6 +895,9 @@
         <strong>Practice</strong> chatting with either your buyer agent or the remote seller agent.
         <strong>run a negotiation</strong> against the <strong>remote seller agent</strong>.
       </p>
+      <p class="meta" style="margin-top: -0.55rem">
+        <a href="https://main.d3hq9kacj1tim5.amplifyapp.com/?" target="_blank" rel="noopener noreferrer">Open leaderboard dashboard</a>
+      </p>
      
       <p class="meta" id="status" hidden></p>
       <div class="row-inline" style="margin-top: -0.45rem; align-items: center; gap: 0.55rem; flex-wrap: wrap">
@@ -926,7 +929,7 @@
       <div class="app-layout">
         <div class="tabbar side-menu" role="tablist" aria-orientation="vertical">
           <button type="button" class="tab active" data-tab="chat" role="tab" aria-selected="true">Practice chat</button>
-          <button type="button" class="tab" data-tab="neg" role="tab" aria-selected="false">Run vs seller</button>
+          <button type="button" class="tab" data-tab="neg" role="tab" aria-selected="false">Enter negotiation arena</button>
           <div class="side-history">
             <h3>Your previous runs</h3>
             <div id="userHistoryList" class="side-history-list"></div>
@@ -958,12 +961,12 @@
               <textarea id="negGoal" rows="4"></textarea>
               <div class="row-inline">
                 <button type="button" class="btn-ghost" id="negSavePrompt">Save prompt</button>
-                <button type="button" id="negRun" disabled>Run negotiation</button>
+                <button type="button" id="negRun" disabled>Run</button>
                 <button type="button" class="btn-walk" id="negWalk" disabled title="Stop the negotiation — you walk away">Walk</button>
                 <button type="button" class="btn-info" id="negInfoOpen" aria-label="How negotiation works" title="How negotiation works">i</button>
               </div>
               <p class="meta" id="negPromptState" style="margin: 0">
-                Save your mandate prompt first. Run is enabled only when the saved prompt matches the text box.
+                Save your mandate prompt first. Arena entry unlocks only when the saved prompt matches the text box.
               </p>
             </div>
             <div id="negSpendBar" class="neg-spend-bar" aria-live="polite">
@@ -1056,6 +1059,9 @@
       /** @type {'buyer' | 'seller'} */
       let chatAgentRole = 'buyer';
       const chatMessages = { buyer: [], seller: [] };
+      const chatInputHistory = { buyer: [], seller: [] };
+      const chatInputHistoryIndex = { buyer: -1, seller: -1 };
+      let applyingHistoryInput = false;
       /** @type {{ buyer: { kind: string, text: string, activity?: { text: string }[] }[], seller: { kind: string, text: string, activity?: { text: string }[] }[] }} */
       const chatDisplay = { buyer: [], seller: [] };
       const NEG_MANDATE_STORAGE_KEY = 'buyerNegMandateSavedV1';
@@ -1776,8 +1782,75 @@
         }
       });
 
+      if (input && form) {
+        input.addEventListener('input', () => {
+          if (applyingHistoryInput) return;
+          chatInputHistoryIndex[chatAgentRole] = -1;
+        });
+
+        input.addEventListener('keydown', (e) => {
+          if (e.isComposing) return;
+
+          // Enter submits; Shift+Enter keeps multiline behavior.
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (!sendBtn || sendBtn.disabled) return;
+            if (typeof form.requestSubmit === 'function') form.requestSubmit();
+            else form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            return;
+          }
+
+          // ArrowUp walks backward through submitted input history (max 10).
+          if (
+            e.key === 'ArrowUp' &&
+            !e.shiftKey &&
+            !e.metaKey &&
+            !e.ctrlKey &&
+            !e.altKey
+          ) {
+            const history = chatInputHistory[chatAgentRole];
+            if (!history.length) return;
+            const current = chatInputHistoryIndex[chatAgentRole];
+            const nextIndex = Math.min(current + 1, history.length - 1);
+            const previous = history[nextIndex];
+            if (typeof previous !== 'string') return;
+            e.preventDefault();
+            chatInputHistoryIndex[chatAgentRole] = nextIndex;
+            applyingHistoryInput = true;
+            input.value = previous;
+            applyingHistoryInput = false;
+            const end = previous.length;
+            input.setSelectionRange(end, end);
+            return;
+          }
+
+          // ArrowDown walks back toward newer/recent history.
+          if (
+            e.key === 'ArrowDown' &&
+            !e.shiftKey &&
+            !e.metaKey &&
+            !e.ctrlKey &&
+            !e.altKey
+          ) {
+            const history = chatInputHistory[chatAgentRole];
+            if (!history.length) return;
+            const current = chatInputHistoryIndex[chatAgentRole];
+            if (current < 0) return;
+            e.preventDefault();
+            const nextIndex = current - 1;
+            chatInputHistoryIndex[chatAgentRole] = nextIndex;
+            applyingHistoryInput = true;
+            input.value = nextIndex >= 0 ? history[nextIndex] || '' : '';
+            applyingHistoryInput = false;
+            const end = input.value.length;
+            input.setSelectionRange(end, end);
+          }
+        });
+      }
+
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (sendBtn && sendBtn.disabled) return;
         if (!hasCustomBuyerAgentName()) {
           updateAgentNameRequirementUi();
           if (agentNameInput) agentNameInput.focus();
@@ -1788,6 +1861,10 @@
         input.value = '';
         const myGen = ++chatStreamGen;
         const roleForTurn = chatAgentRole;
+        chatInputHistoryIndex[roleForTurn] = -1;
+        const roleHistory = chatInputHistory[roleForTurn];
+        roleHistory.unshift(text);
+        if (roleHistory.length > 10) roleHistory.length = 10;
         append('user', text);
         chatMessages[roleForTurn].push({ role: 'user', content: text });
         sendBtn.disabled = true;
