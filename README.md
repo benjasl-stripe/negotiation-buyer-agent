@@ -39,6 +39,19 @@ npm run dev
 
 Open **[http://localhost:3000](http://localhost:3000)** — **Practice chat** or **Run vs seller**.
 
+## Stripe setup for paid tools (MPP)
+
+If you want to use paid property tools over MPP, each attendee needs their own Stripe setup.
+
+1. Create or use a Stripe account.
+2. Add Stripe API keys to your local buyer `.env`:
+   - `STRIPE_SECRET_KEY`
+   - `STRIPE_PUBLISHABLE_KEY`
+3. In the buyer app (`http://localhost:3000`), open the wallet/payment section and add a payment method (card).
+4. Run `npm run buyer:check` and confirm wallet/payment checks pass.
+
+Without this setup, paid MPP tools will return `402 Payment Required` and cannot complete the paid retry flow.
+
 ## Chapter 1: First negotiation run
 
 1. In the UI, set your **Agent name** and choose your **Competing event**.
@@ -78,7 +91,7 @@ curl -i "https://<PROPERTY_API_BASE>/api/property/schools"
 curl -i "https://<PROPERTY_API_BASE>/api/property/inspection"
 ```
 
-If the route is paid, you will see `402 Payment Required`. That is expected in MPP mode.
+If the route is paid, you will see `402 Payment Required`. That is expected in MPP mode until a valid payment credential is provided.
 
 ### Option B: Agent engineer (manifest + runner)
 
