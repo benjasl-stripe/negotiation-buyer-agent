@@ -25,15 +25,11 @@ Your mission:
 ## Quick start
 
 ```bash
-git clone <YOUR_BUYER_REPO_URL>
+git clone https://github.com/benjasl-stripe/negotiation-buyer-agent.git
 cd negotiation-buyer-agent
 
 cp .env.example .env
-# Option A: run `npm run buyer:sync-env` (pull facilitator URLs; needs AWS CLI access)
-# Option B: set .env values manually from facilitator handout
-
 npm install
-npm run buyer:check
 npm run dev
 ```
 
