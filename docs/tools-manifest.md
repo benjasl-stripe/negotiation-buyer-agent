@@ -43,7 +43,7 @@ This workshop focuses on **negotiating and agreeing a deal** plus **MPP**; there
 - **`http.url`** — required.
 - **`http.method`** — `GET` | `POST` | `PUT` | `PATCH` (default `POST`). `GET` sends tool arguments as **query parameters**.
 - **`http.headers`** — map of header → string literal **or** `{ "env": "ENV_VAR" }` (read from the agent process). Use this for API keys or MPP-related auth headers your backend expects.
-- **`mpp`** (boolean) — when `true`, the agent uses the **MPP client** ([mppx](https://www.npmjs.com/package/mppx)): on HTTP **402**, pay via **Stripe SPT** (Agent wallet) or **Tempo** (`TEMPO_PRIVATE_KEY`), then retry with `Authorization: Payment …`. Requires property API **`PROPERTY_GATE_MODE=mpp`**.
+- **`mpp`** (boolean) — when `true`, the agent uses the **MPP client** ([mppx](https://www.npmjs.com/package/mppx)): on HTTP **402**, pay via **Stripe SPT** (Agent wallet), then retry with `Authorization: Payment …`. Requires property API **`PROPERTY_GATE_MODE=mpp`**.
 - **`mpp_spt`** — alias for **`mpp`** (kept for older manifests). Prefer **`mpp`**.
 - **`mpp_legacy_header`** — if `true` with `mpp`/`mpp_spt`, sends **`X-Shared-Payment-Token`** instead of full MPP (for legacy `PropertyGateMode=mpp_spt` only).
 
@@ -73,6 +73,4 @@ From `agent/`: `npm run tools:list`. Options: `--json`, `--manifest /path/to/too
 When **`property-service`** uses **`PropertyGateMode=mpp`**, each dossier `GET` returns **402** until the client completes [MPP](https://docs.stripe.com/payments/machine/mpp) payment:
 
 - **Fiat:** Stripe **SPT** — agent **Agent wallet** tab + `STRIPE_PROFILE_ID` matching the property API seller profile.
-- **Crypto:** **Tempo** — optional `TEMPO_PRIVATE_KEY` on the agent, or test with `npx mppx https://YOUR-HttpApiUrl.../api/property/schools`.
-
 Manifest tools set **`"mpp": true`** (see `agent/data/tools.manifest.json`). The agent handles 402 → pay → retry automatically.

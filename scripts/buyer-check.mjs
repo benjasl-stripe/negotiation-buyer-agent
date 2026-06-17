@@ -34,19 +34,15 @@ if (!lambdaEndpoint && !openAiKey) {
 if (!set('STRIPE_SECRET_KEY')) errors.push('STRIPE_SECRET_KEY (buyer account) is not set');
 if (!set('STRIPE_PUBLISHABLE_KEY')) errors.push('STRIPE_PUBLISHABLE_KEY (buyer account) is not set');
 
-const profile = (
-  process.env.MPP_SELLER_NETWORK_BUSINESS_PROFILE ||
-  process.env.STRIPE_PROFILE_ID ||
-  ''
-).trim();
+const profile = (process.env.STRIPE_PROFILE_ID || '').trim();
 const mintMode = (process.env.MPP_SPT_MINT_MODE || '').trim().toLowerCase();
 const sk = (process.env.STRIPE_SECRET_KEY || '').trim();
 
 if (mintMode === 'issued' || (!mintMode && sk.startsWith('sk_live_'))) {
   if (!profile) {
-    errors.push('MPP_SELLER_NETWORK_BUSINESS_PROFILE is required when MPP_SPT_MINT_MODE=issued');
+    errors.push('STRIPE_PROFILE_ID is required when MPP_SPT_MINT_MODE=issued');
   } else if (!profile.startsWith('profile_')) {
-    warnings.push('MPP_SELLER_NETWORK_BUSINESS_PROFILE should start with profile_');
+    warnings.push('STRIPE_PROFILE_ID should start with profile_');
   }
   if (mintMode === 'issued' && sk.startsWith('sk_test_')) {
     warnings.push(

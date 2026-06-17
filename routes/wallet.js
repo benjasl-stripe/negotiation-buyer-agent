@@ -40,7 +40,7 @@ router.post('/setup-intent', async (req, res) => {
       const needProfile = walletSptMintMode() !== 'test_helper';
       return res.status(503).json({
         error: needProfile
-          ? 'Stripe not configured — set STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, and MPP_SELLER_NETWORK_BUSINESS_PROFILE on the agent.'
+          ? 'Stripe not configured — set STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, and STRIPE_PROFILE_ID on the agent.'
           : 'Stripe not configured — set STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY (MPP_SPT_MINT_MODE=test_helper).',
       });
     }

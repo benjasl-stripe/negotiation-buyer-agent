@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Print the Stripe **network business profile** id for the account whose secret key you pass.
- * Use the **same** Stripe account as **property-service** (seller) when setting `MPP_SELLER_NETWORK_BUSINESS_PROFILE`
+ * Use the **same** Stripe account as **property-service** (seller) when setting `STRIPE_PROFILE_ID`
  * on the buyer agent — unless you intentionally use a different seller account.
  *
  * Usage (repo root, after .env has a secret key):
@@ -63,7 +63,7 @@ async function main() {
       if (res.ok && json && typeof json.id === 'string' && json.id.startsWith('profile_')) {
         console.log('');
         console.log('Set in repo root .env:');
-        console.log(`MPP_SELLER_NETWORK_BUSINESS_PROFILE=${json.id}`);
+        console.log(`STRIPE_PROFILE_ID=${json.id}`);
         console.log('');
         console.log('(Stripe object:', json.object || 'n/a', '| auth:', auth.startsWith('Bearer') ? 'Bearer' : 'Basic', ')');
         return;

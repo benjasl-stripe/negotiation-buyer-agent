@@ -98,7 +98,7 @@ app.listen(PORT, () => {
     `  Judge          ${isJudgeServiceEnabled() ? 'JUDGE_SERVICE_URL set — auto-score after negotiation' : 'set JUDGE_SERVICE_URL for judge scoring'}`
   );
   console.log(
-    `  Payment method  /api/wallet — SPT mint=${walletSptMintMode()} (${isWalletStripeConfigured() ? 'ready' : walletSptMintMode() === 'test_helper' ? 'set STRIPE_SECRET_KEY + STRIPE_PUBLISHABLE_KEY' : 'set STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, MPP_SELLER_NETWORK_BUSINESS_PROFILE'})`
+    `  Payment method  /api/wallet — SPT mint=${walletSptMintMode()} (${isWalletStripeConfigured() ? 'ready' : walletSptMintMode() === 'test_helper' ? 'set STRIPE_SECRET_KEY + STRIPE_PUBLISHABLE_KEY' : 'set STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_PROFILE_ID'})`
   );
   console.log('');
 });
