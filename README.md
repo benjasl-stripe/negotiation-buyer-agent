@@ -74,6 +74,11 @@ Your agent starts with no automatic property tools wired in. That is intentional
 
 You choose what intelligence the buyer can access, and how that intelligence is retrieved.
 
+Discover available tools:
+  ```bash
+   npm run tools:discover
+  ```
+
 At this stage you have two valid playstyles:
 
 1. **Manual investigator (fastest start):** call property endpoints yourself with `curl`, then feed findings to your buyer strategy.
@@ -85,11 +90,7 @@ Use this when you want to validate data paths before writing tool logic.
 
 ```bash
 # Example: free or paid route depending on backend config
-curl -i "https://<PROPERTY_API_BASE>/api/property/schools"
-
-# Example: another dossier
-curl -i "https://<PROPERTY_API_BASE>/api/property/inspection"
-```
+curl -i "https://jf04vpwzxk.execute-api.us-west-2.amazonaws.com/api/property/schools"
 
 If the route is paid, you will see `402 Payment Required`. That is expected in MPP mode until a valid payment credential is provided.
 
@@ -97,10 +98,6 @@ If the route is paid, you will see `402 Payment Required`. That is expected in M
 
 Use this when you want your buyer agent to fetch evidence by itself.
 
-1. Discover available tools:
-  ```bash
-   npm run tools:discover
-  ```
 2. Add selected tools to `data/tools.manifest.json`.
 3. Point each tool URL to your deployed property-service endpoint.
 4. Write strong `description` triggers so the model knows when to call each tool.
@@ -108,20 +105,19 @@ Use this when you want your buyer agent to fetch evidence by itself.
 Example manifest entry:
 
 ```json
-{
-  "name": "property_inspection_report",
-  "description": "Retrieve inspection findings and repair estimates. Use when condition, repairs, credits, or immediate safety issues are discussed.",
-  "parameters": {
-    "type": "object",
-    "properties": {}
-  },
-  "http": {
-    "method": "GET",
-    "url": "<PROPERTY_API_BASE>/api/property/inspection",
-    "headers": {}
-  },
-  "mpp": true
-}
+  {
+      "name": "property_schools",
+      "description": "Starter/free tool for assignment, rezoning, and buyer demand signals.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      },
+      "http": {
+        "method": "GET",
+        "url": "https://jf04vpwzxk.execute-api.us-west-2.amazonaws.com/api/property/schools",
+        "headers": {}
+      }
+    }
 ```
 
 ### MPP coding exercise (minimal, real flow)
@@ -138,25 +134,6 @@ Your implementation target is the core loop:
 4. retry with payment credential
 5. return success data + receipt
 
-Then choose tools from `data/tools.catalog.json` and manually create manifest entries in `data/tools.manifest.json`.
-
-### Copy/paste starter tool
-
-```json
-{
-  "name": "property_inspection_report",
-  "description": "Retrieve inspection findings and repair estimates. Use when condition, repairs, credits, or immediate safety issues are discussed.",
-  "parameters": {
-    "type": "object",
-    "properties": {}
-  },
-  "http": {
-    "method": "GET",
-    "url": "<PROPERTY_API_BASE>/api/property/inspection",
-    "headers": {}
-  },
-  "mpp": true
-}
 ```
 
 ### Early-win checklist
