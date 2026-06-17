@@ -42,7 +42,13 @@
     async list() {
       const data = await apiGet('/api/leaderboard');
       const rows = Array.isArray(data.entries) ? data.entries : [];
-      return rows.map(normalizeEntry);
+      return rows
+        .map(normalizeEntry)
+        .sort((a, b) => {
+          const ta = Date.parse(a.savedAt || '') || 0;
+          const tb = Date.parse(b.savedAt || '') || 0;
+          return tb - ta;
+        });
     },
 
     /** @param {string} id @returns {Promise<ReturnType<typeof normalizeEntry> | null>} */

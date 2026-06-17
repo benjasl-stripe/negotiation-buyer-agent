@@ -2241,80 +2241,25 @@
         setJudgeStatus('Judge error', { enableButton: true, ready: false, state: 'error' });
       }
 
-      /** @type {boolean | null} */
-      let judgeConfigured = null;
-
-      async function isJudgeConfigured() {
-        if (judgeConfigured != null) return judgeConfigured;
-        try {
-          const r = await fetch('/api/negotiation/judge-config', { credentials: 'include' });
-          const j = await r.json();
-          judgeConfigured = !!j.configured;
-        } catch {
-          judgeConfigured = false;
-        }
-        return judgeConfigured;
-      }
-
-      /**
-       * @param {Record<string, unknown>} negResult
-       * @param {string} mandate
-       * @param {number} streamGen
-       */
-      function showJudgeSkipped() {
+      function showJudgeSkipped(msg) {
+        const reason = String(msg || '').trim();
         latestJudgePayload = { kind: 'skipped' };
         if (judgeModalBody) {
           judgeModalBody.className = 'neg-judge-panel err';
-          judgeModalBody.innerHTML =
-            '<strong>Judge scoring not configured.</strong> Set <code>JUDGE_SERVICE_URL</code> in repo root <code>.env</code> ' +
-            '(run <code>npm run buyer:sync-env</code> to pull from AWS, or <code>npm run judge-service:dev</code> for local). ' +
-            'Restart the buyer agent after updating env.';
+          judgeModalBody.innerHTML = reason
+            ? '<strong>Judge skipped.</strong> ' + escapeHtml(reason)
+            : '<strong>Judge scoring not configured.</strong> Set <code>JUDGE_SERVICE_URL</code> in repo root <code>.env</code> ' +
+              '(run <code>npm run buyer:sync-env</code> to pull from AWS, or <code>npm run judge-service:dev</code> for local). ' +
+              'Restart the buyer agent after updating env.';
         }
         setJudgeStatus('Not configured', { enableButton: true, ready: false, state: 'error' });
       }
 
-      async function requestJudgeEvaluation(negResult, mandate, streamGen, historyId, eventId) {
-        if (!(await isJudgeConfigured())) {
-          if (streamGen === negStreamGen) showJudgeSkipped();
-          return;
-        }
-        showJudgePending();
-        try {
-          const r = await fetch('/api/negotiation/judge', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              ...negResult,
-              buyerGoal: mandate,
-              event_id: eventId || getSelectedEventId() || 'default',
-            }),
-          });
-          if (streamGen !== negStreamGen) return;
-          const j = await r.json().catch(() => ({}));
-          if (!r.ok) {
-            showJudgeError(j.error || r.statusText || 'Request failed');
-            return;
-          }
-          showJudgeResult(j);
-          if (historyId) {
-            const existing = userNegHistory.find((r) => String(r.id) === String(historyId));
-            if (existing) {
-              upsertUserRun({ ...existing, judge: j }, false);
-            }
-          }
-          const entryId = typeof j.entryId === 'string' ? j.entryId : '';
-          const link = judgeModalBody && judgeModalBody.querySelector('a[href="/leaderboard.html"]');
-          if (link && entryId) {
-            link.href = '/leaderboard.html?id=' + encodeURIComponent(entryId);
-            link.textContent = 'View on leaderboard';
-          } else if (link && j.leaderboard_persist_error) {
-            link.textContent = 'Leaderboard save failed — ' + j.leaderboard_persist_error;
-          }
-        } catch (err) {
-          if (streamGen !== negStreamGen) return;
-          showJudgeError(String(err.message || err));
-        }
+      /** @param {Record<string, unknown>} j */
+      function attachJudgeToHistory(j, historyId) {
+        if (!historyId) return;
+        const existing = userNegHistory.find((r) => String(r.id) === String(historyId));
+        if (existing) upsertUserRun({ ...existing, judge: j }, false);
       }
 
       /** @param {Record<string, unknown>} j */
@@ -2614,7 +2559,7 @@
             };
             upsertUserRun(outcome, true);
             appendOutcome(outcome);
-            requestJudgeEvaluation(outcome, buyerGoal, myNegGen, runHistoryId, selectedEventId);
+            showJudgeSkipped('Manual walk from the browser is not server-scored. Complete a normal run for official judging.');
           });
         }
 
@@ -2761,18 +2706,20 @@
               negotiationSpend: spend || evt.negotiationSpend,
             };
             upsertUserRun(runEntry, true);
-            requestJudgeEvaluation(
-              {
-                ...evt,
-                buyerName: runBuyerName,
-                transcript: Array.isArray(evt.transcript) && evt.transcript.length ? evt.transcript : negLiveTranscript.slice(),
-                negotiationSpend: spend || evt.negotiationSpend,
-              },
-              buyerGoal,
-              myNegGen,
-              runHistoryId,
-              selectedEventId
-            );
+            setJudgeStatus('Scoring…', { enableButton: false, ready: false, state: 'running' });
+          } else if (evt.type === 'judge_pending') {
+            setJudgeStatus('Scoring…', { enableButton: false, ready: false, state: 'running' });
+          } else if (evt.type === 'judge_skipped') {
+            showJudgeSkipped(evt.error || '');
+          } else if (evt.type === 'judge_result') {
+            if (evt.judge && typeof evt.judge === 'object') {
+              showJudgeResult(evt.judge);
+              attachJudgeToHistory(evt.judge, runHistoryId);
+            } else {
+              showJudgeError('Judge returned invalid payload');
+            }
+          } else if (evt.type === 'judge_error') {
+            showJudgeError(evt.error || 'Judge request failed');
           } else if (evt.type === 'error') {
             clearTyping();
             const errP = document.createElement('p');
@@ -2793,6 +2740,8 @@
             signal: negAbort.signal,
             body: JSON.stringify({
               buyerGoal,
+              buyerName: runBuyerName,
+              event_id: selectedEventId || 'default',
               maxRounds: NEG_MAX_ROUNDS,
             }),
           });

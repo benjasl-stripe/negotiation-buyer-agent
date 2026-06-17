@@ -63,7 +63,7 @@ app.get('/api/health', (_req, res) => {
       ? { mode: 'remote', configured: true }
       : { mode: 'remote', configured: false, note: 'Set SELLER_SERVICE_URL for Run vs seller' },
     judge: isJudgeServiceEnabled()
-      ? { configured: true, endpoint: 'POST /api/negotiation/judge' }
+      ? { configured: true, mode: 'backend_only', note: 'Scored automatically during negotiation runs' }
       : { configured: false, note: 'Set JUDGE_SERVICE_URL for auto-scoring after negotiation' },
     wallet: {
       stripe_agentic_configured: isWalletStripeConfigured(),
@@ -95,7 +95,7 @@ app.listen(PORT, () => {
     `  Negotiation  POST /api/negotiation/run (seller: remote — ${isExternalSellerEnabled() ? 'SELLER_SERVICE_URL set' : 'set SELLER_SERVICE_URL'})`
   );
   console.log(
-    `  Judge          ${isJudgeServiceEnabled() ? 'JUDGE_SERVICE_URL set — auto-score after negotiation' : 'set JUDGE_SERVICE_URL for judge scoring'}`
+    `  Judge          ${isJudgeServiceEnabled() ? 'JUDGE_SERVICE_URL set — backend-only auto-scoring enabled' : 'set JUDGE_SERVICE_URL for judge scoring'}`
   );
   console.log(
     `  Payment method  /api/wallet — SPT mint=${walletSptMintMode()} (${isWalletStripeConfigured() ? 'ready' : walletSptMintMode() === 'test_helper' ? 'set STRIPE_SECRET_KEY + STRIPE_PUBLISHABLE_KEY' : 'set STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_PROFILE_ID'})`
