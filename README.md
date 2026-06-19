@@ -12,76 +12,76 @@ The leaderboard is public.
 
 You start with a local buyer app. You shape the agent, select tools, run negotiations, review judge feedback, and iterate until your agent can close strong deals with efficient spend.
 
-## Your first 30 minutes
+## 3-step attendee flow
 
-Your mission:
-
-1. Boot the app locally.
-2. Meet your buyer and seller in practice chat.
-3. Run your first scored negotiation.
-4. Read the judge's verdict (score, agreed price, spend).
-5. Improve and run again.
-
-## Quick start
+### Step 1: Deploy + configure with your Stripe account
 
 ```bash
 git clone https://github.com/benjasl-stripe/negotiation-buyer-agent.git
 cd negotiation-buyer-agent
-
 cp .env.example .env
 npm install
+```
+
+In `.env`, configure your workshop endpoints and Stripe keys:
+
+- `LAMBDA_ENDPOINT`, `WORKSHOP_SECRET`
+- `SELLER_SERVICE_URL`
+- `JUDGE_SERVICE_URL`
+- `STRIPE_SECRET_KEY`
+- `STRIPE_PUBLISHABLE_KEY`
+
+Then validate and run:
+
+```bash
+npm run buyer:check
 npm run dev
 ```
 
-Open **[http://localhost:3000](http://localhost:3000)** — **Practice chat** or **Run vs seller**.
+Open **[http://localhost:3000](http://localhost:3000)**.
 
-## Stripe setup for paid tools (MPP)
+### Step 2: Practice chat + first negotiation
 
-If you want to use paid property tools over MPP, each attendee needs their own Stripe setup.
-
-1. Create or use a Stripe account.
-2. Add Stripe API keys to your local buyer `.env`:
-   - `STRIPE_SECRET_KEY`
-   - `STRIPE_PUBLISHABLE_KEY`
-3. In the buyer app (`http://localhost:3000`), open the wallet/payment section and add a payment method (card).
-4. Run `npm run buyer:check` and confirm wallet/payment checks pass.
-
-Without this setup, paid MPP tools will return `402 Payment Required` and cannot complete the paid retry flow.
-
-## Chapter 1: First negotiation run
-
-1. In the UI, set your **Agent name** and choose your **Competing event**.
-2. In **Practice chat**:
-  - chat with **Buyer agent**,
-  - switch to **Seller agent**.
+1. Set your **Agent name** and choose your **Competing event**.
+2. In **Practice chat**, talk to:
+  - **Buyer agent**
+  - **Seller agent**
 3. Go to **Run vs seller**:
-  - write a short buyer mandate,
+  - write your buyer mandate,
   - click **Save prompt**,
-  - click **Run negotiation**.
-4. When run ends, open **View judge** and note:
-  - overall score,
+  - click **Run**.
+4. Open **View judge** and review:
+  - score,
   - agreed price,
-  - tool calls + spend.
-5. Make one improvement. then run again.
+  - tool spend.
 
-## Chapter 2: Build your toolbelt
+### Step 3: Add tools + payment, then run again
 
-Your agent starts with no automatic property tools wired in. That is intentional.
-
-You choose what intelligence the buyer can access, and how that intelligence is retrieved.
-
-Discover available tools:
+Use tools to supercharge your buyer agent:
 
 ```bash
 npm run tools:discover
 ```
 
-At this stage you have two valid playstyles:
+Then:
 
-1. **Manual investigator (fastest start):** call property endpoints yourself with `curl`, then feed findings to your buyer strategy.
-2. **Agent engineer (best scale):** wire tools into the manifest so the agent fetches data automatically during negotiation.
+1. Add tool entries to `data/tools.manifest.json`.
+2. Add a payment method in the app wallet (Stripe test card: `4242 4242 4242 4242`).
+3. Test tools in **Practice chat** with your buyer agent.
+4. Tune your buyer mandate and run another negotiation.
 
-### Option A: Manual investigator (curl)
+Paid tools require a valid wallet setup; otherwise they return `402 Payment Required`.
+
+## Reference: toolbelt patterns
+
+Use this as a reference while doing Step 3.
+
+Two valid playstyles:
+
+1. **Manual investigator (fastest start):** call property endpoints with `curl`, then feed findings into strategy.
+2. **Agent engineer (best scale):** wire tools into the manifest so the buyer agent fetches evidence automatically.
+
+### Pattern A: Manual investigator (curl)
 
 Use this when you want to validate data paths before writing tool logic.
 
@@ -90,9 +90,9 @@ Use this when you want to validate data paths before writing tool logic.
 curl -i "https://jf04vpwzxk.execute-api.us-west-2.amazonaws.com/api/property/schools"
 ```
 
-If the route is paid, you will see `402 Payment Required`. That is expected in MPP mode until a valid payment credential is provided.
+If the route is pay-per-use, you will see `402 Payment Required`. That is expected in MPP mode until a valid payment credential is provided.
 
-### Option B: Agent engineer (manifest + runner)
+### Pattern B: Agent engineer (manifest + runner)
 
 Use this when you want your buyer agent to fetch evidence by itself.
 
@@ -147,7 +147,7 @@ Your implementation target is the core loop:
 - Leverage per dollar matters.
 - Fabricated/uncited claims get punished hard.
 
-## Chapter 3: Supercharge your agent
+## Prompt + negotiation strategy deep dive
 
 Whether you stay manual (`curl`) or integrate tools into the agent, the goal is the same: turn evidence into better outcomes.
 
@@ -176,7 +176,6 @@ If you integrate tools, make your tool descriptions and buyer prompt specific en
 2. Inspect tool timeline + spend + final transcript.
 3. Tighten tool descriptions and buyer prompt (or improve your manual evidence notes).
 4. Re-run and compare score, agreed price, and tool cost.
-
 
 ## Customization
 
