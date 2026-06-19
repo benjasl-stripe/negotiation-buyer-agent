@@ -25,9 +25,6 @@ npm install
 
 In `.env`, configure your workshop endpoints and Stripe keys:
 
-- `LAMBDA_ENDPOINT`, `WORKSHOP_SECRET`
-- `SELLER_SERVICE_URL`
-- `JUDGE_SERVICE_URL`
 - `STRIPE_SECRET_KEY`
 - `STRIPE_PUBLISHABLE_KEY`
 
